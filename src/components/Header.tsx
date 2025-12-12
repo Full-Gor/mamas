@@ -15,9 +15,9 @@ export function Header({ currentDate, onPrevMonth, onNextMonth, onToday, onHelpC
         {/* Logo et titre */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">M</span>
+            <span className="text-white font-bold text-xl">SG</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-800">MAMAS</h1>
+          <h1 className="text-xl font-bold text-gray-800">SG App</h1>
         </div>
 
         {/* Navigation du mois */}
