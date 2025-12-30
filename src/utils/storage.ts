@@ -1,43 +1,45 @@
-import type { Event } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Event, Todo } from '../types';
 
-const STORAGE_KEY = 'mamas_events';
+const EVENTS_KEY = 'sg_app_events';
+const TODOS_KEY = 'sg_app_todos';
 
-// Sauvegarder les événements dans le localStorage
-export function saveEvents(events: Event[]): void {
+// Events
+export async function saveEvents(events: Event[]): Promise<void> {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    await AsyncStorage.setItem(EVENTS_KEY, JSON.stringify(events));
   } catch (error) {
-    console.error('Erreur lors de la sauvegarde:', error);
+    console.error('Erreur sauvegarde events:', error);
   }
 }
 
-// Charger les événements depuis le localStorage
-export function loadEvents(): Event[] {
+export async function loadEvents(): Promise<Event[]> {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
+    const data = await AsyncStorage.getItem(EVENTS_KEY);
+    return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error('Erreur lors du chargement:', error);
+    console.error('Erreur chargement events:', error);
+    return [];
   }
-  return [];
 }
 
-// Supprimer un événement
-export function deleteEvent(eventId: string): Event[] {
-  const events = loadEvents();
-  const filteredEvents = events.filter(e => e.id !== eventId);
-  saveEvents(filteredEvents);
-  return filteredEvents;
+// Todos
+export async function saveTodos(todos: Todo[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(TODOS_KEY, JSON.stringify(todos));
+  } catch (error) {
+    console.error('Erreur sauvegarde todos:', error);
+  }
 }
 
-// Ajouter un événement
-export function addEvent(event: Event): Event[] {
-  const events = loadEvents();
-  events.push(event);
-  saveEvents(events);
-  return events;
+export async function loadTodos(): Promise<Todo[]> {
+  try {
+    const data = await AsyncStorage.getItem(TODOS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Erreur chargement todos:', error);
+    return [];
+  }
 }
 
 // Générer un ID unique

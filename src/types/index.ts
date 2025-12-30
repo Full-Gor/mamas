@@ -1,4 +1,4 @@
-// Types pour l'application MAMAS - Agenda Intelligent
+// Types pour l'application SG App
 
 export interface Category {
   id: string;
@@ -16,15 +16,19 @@ export interface Event {
   createdAt: string;
 }
 
-export interface DayEvents {
+export interface Todo {
+  id: string;
+  text: string;
+  checked: boolean;
   date: string;
-  events: Event[];
 }
 
-export type ViewMode = 'week' | 'month';
-
-export interface AppState {
-  events: Event[];
-  selectedDate: string;
-  viewMode: ViewMode;
+export interface CalendarDay {
+  day: number;
+  prevMonth?: boolean;
+  nextMonth?: boolean;
+  highlight?: boolean;
+  selected?: boolean;
+  dot?: string;
+  moon?: boolean;
 }

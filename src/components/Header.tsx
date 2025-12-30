@@ -1,72 +1,106 @@
-import { getMonthName } from '../utils/dateUtils';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { colors, neuShadow } from '../theme/colors';
 
 interface HeaderProps {
-  currentDate: Date;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  onToday: () => void;
-  onHelpClick: () => void;
+  onSettingsPress?: () => void;
+  onNotificationPress?: () => void;
 }
 
-export function Header({ currentDate, onPrevMonth, onNextMonth, onToday, onHelpClick }: HeaderProps) {
+export function Header({ onSettingsPress, onNotificationPress }: HeaderProps) {
   return (
-    <header className="bg-white shadow-md px-4 py-3 sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Logo et titre */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">SG</span>
-          </div>
-          <h1 className="text-xl font-bold text-gray-800">SG App</h1>
-        </div>
+    <View style={styles.header}>
+      <View style={styles.logo}>
+        <View style={styles.logoIcon}>
+          <Text style={styles.logoText}>SG</Text>
+        </View>
+        <Text style={styles.logoTitle}>SG App</Text>
+      </View>
 
-        {/* Navigation du mois */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPrevMonth}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Mois précédent"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+      <View style={styles.headerRight}>
+        <Text style={styles.welcomeText}>Bienvenue</Text>
 
-          <div className="min-w-[180px] text-center">
-            <span className="text-lg font-semibold text-gray-800">
-              {getMonthName(currentDate)} {currentDate.getFullYear()}
-            </span>
-          </div>
+        <TouchableOpacity style={styles.iconBtn} onPress={onNotificationPress}>
+          <Feather name="bell" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
-          <button
-            onClick={onNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Mois suivant"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+        <TouchableOpacity style={styles.iconBtn} onPress={onSettingsPress}>
+          <Feather name="settings" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
-          <button
-            onClick={onToday}
-            className="ml-2 px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Aujourd'hui
-          </button>
-        </div>
-
-        {/* Bouton Aide */}
-        <button
-          onClick={onHelpClick}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Aide</span>
-        </button>
-      </div>
-    </header>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>U</Text>
+        </View>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingTop: 50,
+  },
+  logo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoIcon: {
+    width: 32,
+    height: 32,
+    backgroundColor: colors.accent,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.background,
+  },
+  logoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  welcomeText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginRight: 4,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.cardBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...neuShadow.raisedSm,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...neuShadow.raisedSm,
+  },
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.background,
+  },
+});

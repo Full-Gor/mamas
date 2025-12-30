@@ -1,6 +1,9 @@
 export { Header } from './Header';
+export { TimeCard } from './TimeCard';
+export { EventsCard } from './EventsCard';
+export { TodoCard } from './TodoCard';
 export { Calendar } from './Calendar';
-export { DayEvents } from './DayEvents';
-export { VoiceInput } from './VoiceInput';
-export { CategoryGrid } from './CategoryGrid';
-export { HelpModal } from './HelpModal';
+export { NeuCard } from './NeuCard';
+export { NeuButton } from './NeuButton';
+export { AddEventModal } from './AddEventModal';
+export { AddTodoModal } from './AddTodoModal';

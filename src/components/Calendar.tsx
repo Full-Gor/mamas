@@ -1,23 +1,30 @@
-import { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { colors, neuShadow } from '../theme/colors';
+import { NeuCard } from './NeuCard';
+import { getCalendarDays, getMonthName, getDayName, formatDate, isToday } from '../utils/dateUtils';
 import type { Event } from '../types';
-import { getMonthDays, formatDate, isToday } from '../utils/dateUtils';
 import { getCategoryById } from '../data/categories';
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const DAY_SIZE = (SCREEN_WIDTH - 80) / 7;
+
 interface CalendarProps {
-  currentDate: Date;
-  selectedDate: string;
   events: Event[];
-  onDateSelect: (date: string) => void;
+  selectedDate: string;
+  onSelectDate: (date: string) => void;
 }
 
-const DAYS_HEADER = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const WEEK_DAYS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
 
-export function Calendar({ currentDate, selectedDate, events, onDateSelect }: CalendarProps) {
+export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
   const days = useMemo(() => {
-    return getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
+    return getCalendarDays(currentDate.getFullYear(), currentDate.getMonth());
   }, [currentDate]);
 
-  // Grouper les événements par date
   const eventsByDate = useMemo(() => {
     const map = new Map<string, Event[]>();
     events.forEach(event => {
@@ -28,76 +35,203 @@ export function Calendar({ currentDate, selectedDate, events, onDateSelect }: Ca
     return map;
   }, [events]);
 
-  const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === currentDate.getMonth();
+  const goToPrevMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-4">
-      {/* En-tête des jours */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {DAYS_HEADER.map(day => (
-          <div
-            key={day}
-            className="text-center text-sm font-semibold text-gray-500 py-2"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
+    <NeuCard style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.navButtons}>
+          <TouchableOpacity style={styles.navBtn} onPress={goToPrevMonth}>
+            <Feather name="chevron-left" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navBtn} onPress={goToNextMonth}>
+            <Feather name="chevron-right" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Grille des jours */}
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((date, index) => {
-          const dateStr = formatDate(date);
+        <TouchableOpacity style={styles.monthSelector}>
+          <Text style={styles.selectorText}>{getMonthName(currentDate.getMonth())}</Text>
+          <Feather name="chevron-down" size={14} color={colors.text} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.yearSelector}>
+          <Text style={styles.selectorText}>{currentDate.getFullYear()}</Text>
+          <Feather name="chevron-down" size={14} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Week days header */}
+      <View style={styles.weekDaysRow}>
+        {WEEK_DAYS.map((day, idx) => (
+          <View key={idx} style={styles.weekDayCell}>
+            <Text style={styles.weekDayText}>{day}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Days grid */}
+      <View style={styles.daysGrid}>
+        {days.map((dayData, idx) => {
+          const dateStr = formatDate(dayData.date);
           const dayEvents = eventsByDate.get(dateStr) || [];
           const isSelected = dateStr === selectedDate;
-          const isTodayDate = isToday(date);
-          const isInCurrentMonth = isCurrentMonth(date);
+          const isTodayDate = isToday(dayData.date);
 
           return (
-            <button
-              key={index}
-              onClick={() => onDateSelect(dateStr)}
-              className={`
-                relative min-h-[80px] p-1 rounded-lg border-2 transition-all
-                ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-transparent hover:bg-gray-50'}
-                ${!isInCurrentMonth ? 'opacity-40' : ''}
-              `}
+            <TouchableOpacity
+              key={idx}
+              style={[
+                styles.dayCell,
+                !dayData.isCurrentMonth && styles.dayCellMuted,
+                isSelected && styles.dayCellSelected,
+              ]}
+              onPress={() => onSelectDate(dateStr)}
             >
-              {/* Numéro du jour */}
-              <div
-                className={`
-                  text-sm font-medium mb-1
-                  ${isTodayDate ? 'w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto' : ''}
-                  ${!isTodayDate && isInCurrentMonth ? 'text-gray-800' : ''}
-                  ${!isTodayDate && !isInCurrentMonth ? 'text-gray-400' : ''}
-                `}
-              >
-                {date.getDate()}
-              </div>
+              <Text style={[
+                styles.dayText,
+                !dayData.isCurrentMonth && styles.dayTextMuted,
+                isTodayDate && styles.dayTextToday,
+                isSelected && styles.dayTextSelected,
+              ]}>
+                {dayData.day}
+              </Text>
 
-              {/* Indicateurs d'événements (max 3 visibles) */}
-              <div className="flex flex-wrap gap-0.5 justify-center">
-                {dayEvents.slice(0, 3).map((event, i) => {
-                  const category = getCategoryById(event.categoryId);
-                  return (
-                    <div
-                      key={i}
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: category?.color || '#ccc' }}
-                      title={event.title}
-                    />
-                  );
-                })}
-                {dayEvents.length > 3 && (
-                  <span className="text-xs text-gray-500">+{dayEvents.length - 3}</span>
-                )}
-              </div>
-            </button>
+              {/* Event dots */}
+              {dayEvents.length > 0 && (
+                <View style={styles.dotsContainer}>
+                  {dayEvents.slice(0, 3).map((event, i) => {
+                    const category = getCategoryById(event.categoryId);
+                    return (
+                      <View
+                        key={i}
+                        style={[styles.dot, { backgroundColor: category?.color || colors.blue }]}
+                      />
+                    );
+                  })}
+                </View>
+              )}
+            </TouchableOpacity>
           );
         })}
-      </div>
-    </div>
+      </View>
+    </NeuCard>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  navButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  navBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.cardBgLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...neuShadow.raisedSm,
+  },
+  monthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: colors.cardBgLight,
+    ...neuShadow.raisedSm,
+  },
+  yearSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: colors.cardBgLight,
+    ...neuShadow.raisedSm,
+  },
+  selectorText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  weekDaysRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  weekDayCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  weekDayText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    marginVertical: 2,
+  },
+  dayCellMuted: {
+    opacity: 0.4,
+  },
+  dayCellSelected: {
+    backgroundColor: colors.cardBgLight,
+    ...neuShadow.pressed,
+  },
+  dayText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  dayTextMuted: {
+    color: colors.textDim,
+  },
+  dayTextToday: {
+    color: colors.accent,
+    fontWeight: '700',
+  },
+  dayTextSelected: {
+    color: colors.text,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    gap: 2,
+    marginTop: 4,
+    position: 'absolute',
+    bottom: 6,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+});
