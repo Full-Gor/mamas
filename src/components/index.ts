@@ -7,3 +7,4 @@ export { NeuCard } from './NeuCard';
 export { NeuButton } from './NeuButton';
 export { AddEventModal } from './AddEventModal';
 export { AddTodoModal } from './AddTodoModal';
+export { VoiceInput } from './VoiceInput';

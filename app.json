@@ -13,7 +13,11 @@
       "backgroundColor": "#1a1a1f"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Cette app utilise la reconnaissance vocale pour créer des événements.",
+        "NSMicrophoneUsageDescription": "Cette app utilise le microphone pour la reconnaissance vocale."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +25,22 @@
         "backgroundColor": "#1a1a1f"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sgapp.calendar"
+      "package": "com.sgapp.calendar",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Cette app utilise le microphone pour la reconnaissance vocale.",
+          "speechRecognitionPermission": "Cette app utilise la reconnaissance vocale pour créer des événements."
+        }
+      ]
+    ]
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '../theme/colors';
@@ -12,6 +12,7 @@ import {
   Calendar,
   AddEventModal,
   AddTodoModal,
+  VoiceInput,
 } from '../components';
 import type { Event, Todo } from '../types';
 
@@ -38,16 +39,14 @@ export function HomeScreen() {
     loadData();
   }, []);
 
+  // Événements du jour sélectionné
+  const selectedDayEvents = useMemo(() => {
+    return events.filter(e => e.date === selectedDate);
+  }, [events, selectedDate]);
+
   // Ajouter un événement
   const handleAddEvent = async (event: Event) => {
     const newEvents = [...events, event];
-    setEvents(newEvents);
-    await saveEvents(newEvents);
-  };
-
-  // Supprimer un événement
-  const handleDeleteEvent = async (eventId: string) => {
-    const newEvents = events.filter(e => e.id !== eventId);
     setEvents(newEvents);
     await saveEvents(newEvents);
   };
@@ -85,7 +84,7 @@ export function HomeScreen() {
             <View style={styles.leftColumn}>
               <TimeCard />
               <EventsCard
-                events={events.filter(e => e.date === selectedDate)}
+                events={selectedDayEvents}
                 onAddEvent={() => setShowAddEvent(true)}
                 selectedDate={selectedDate}
               />
@@ -101,12 +100,25 @@ export function HomeScreen() {
                 selectedDate={selectedDate}
                 onSelectDate={setSelectedDate}
               />
+              {/* Voice Input pour tablette */}
+              <VoiceInput
+                selectedDate={selectedDate}
+                onAddEvent={handleAddEvent}
+                eventsCount={selectedDayEvents.length}
+              />
             </View>
           </View>
         ) : (
           // Layout mobile (1 colonne)
           <View style={styles.mobileLayout}>
             <TimeCard />
+
+            {/* Voice Input - bouton micro principal */}
+            <VoiceInput
+              selectedDate={selectedDate}
+              onAddEvent={handleAddEvent}
+              eventsCount={selectedDayEvents.length}
+            />
 
             <Calendar
               events={events}
@@ -115,7 +127,7 @@ export function HomeScreen() {
             />
 
             <EventsCard
-              events={events.filter(e => e.date === selectedDate)}
+              events={selectedDayEvents}
               onAddEvent={() => setShowAddEvent(true)}
               selectedDate={selectedDate}
             />
