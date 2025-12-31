@@ -1,11 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
 import { getCalendarDays, getMonthName, formatDate, isToday } from '../utils/dateUtils';
 import type { Event } from '../types';
 import { getCategoryById } from '../data/categories';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_SMALL_SCREEN = SCREEN_WIDTH < 380;
 
 interface CalendarProps {
   events: Event[];
@@ -14,7 +17,8 @@ interface CalendarProps {
 }
 
 const WEEK_DAYS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) {
@@ -55,12 +59,17 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
     setShowYearPicker(false);
   };
 
+  // Nom du mois adapté à la taille de l'écran
+  const monthName = IS_SMALL_SCREEN
+    ? MONTHS[currentDate.getMonth()]
+    : getMonthName(currentDate.getMonth());
+
   return (
     <NeuCard style={styles.container}>
-      {/* Header avec navigation */}
+      {/* Header avec navigation - responsive */}
       <View style={styles.header}>
+        {/* Boutons de navigation */}
         <View style={styles.navButtons}>
-          {/* Bouton Précédent */}
           <TouchableOpacity
             style={[
               styles.navBtn,
@@ -71,10 +80,9 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
             onPress={goToPrevMonth}
             activeOpacity={1}
           >
-            <Feather name="chevron-left" size={18} color={colors.textMuted} />
+            <Feather name="chevron-left" size={16} color={colors.textMuted} />
           </TouchableOpacity>
 
-          {/* Bouton Suivant */}
           <TouchableOpacity
             style={[
               styles.navBtn,
@@ -85,39 +93,42 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
             onPress={goToNextMonth}
             activeOpacity={1}
           >
-            <Feather name="chevron-right" size={18} color={colors.textMuted} />
+            <Feather name="chevron-right" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
-        {/* Sélecteur de mois */}
-        <TouchableOpacity
-          style={styles.monthSelector}
-          onPress={() => {
-            setShowMonthPicker(!showMonthPicker);
-            setShowYearPicker(false);
-          }}
-        >
-          <Text style={styles.selectorText}>{getMonthName(currentDate.getMonth())}</Text>
-          <Feather name="chevron-down" size={14} color={colors.text} />
-        </TouchableOpacity>
+        {/* Sélecteurs mois et année */}
+        <View style={styles.selectors}>
+          {/* Sélecteur de mois */}
+          <TouchableOpacity
+            style={styles.monthSelector}
+            onPress={() => {
+              setShowMonthPicker(!showMonthPicker);
+              setShowYearPicker(false);
+            }}
+          >
+            <Text style={styles.selectorText} numberOfLines={1}>{monthName}</Text>
+            <Feather name="chevron-down" size={12} color={colors.text} />
+          </TouchableOpacity>
 
-        {/* Sélecteur d'année */}
-        <TouchableOpacity
-          style={styles.yearSelector}
-          onPress={() => {
-            setShowYearPicker(!showYearPicker);
-            setShowMonthPicker(false);
-          }}
-        >
-          <Text style={styles.selectorText}>{currentDate.getFullYear()}</Text>
-          <Feather name="chevron-down" size={14} color={colors.text} />
-        </TouchableOpacity>
+          {/* Sélecteur d'année */}
+          <TouchableOpacity
+            style={styles.yearSelector}
+            onPress={() => {
+              setShowYearPicker(!showYearPicker);
+              setShowMonthPicker(false);
+            }}
+          >
+            <Text style={styles.selectorText}>{currentDate.getFullYear()}</Text>
+            <Feather name="chevron-down" size={12} color={colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Dropdown Mois */}
       {showMonthPicker && (
         <View style={styles.pickerDropdown}>
-          {MONTHS.map((month, idx) => (
+          {MONTHS_FULL.map((month, idx) => (
             <TouchableOpacity
               key={month}
               style={[
@@ -130,7 +141,7 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
                 styles.pickerItemText,
                 currentDate.getMonth() === idx && styles.pickerItemTextActive,
               ]}>
-                {month}
+                {IS_SMALL_SCREEN ? MONTHS[idx] : month}
               </Text>
             </TouchableOpacity>
           ))}
@@ -139,12 +150,13 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
 
       {/* Dropdown Année */}
       {showYearPicker && (
-        <View style={styles.pickerDropdown}>
+        <View style={[styles.pickerDropdown, styles.yearPickerDropdown]}>
           {YEARS.map((year) => (
             <TouchableOpacity
               key={year}
               style={[
                 styles.pickerItem,
+                styles.yearPickerItem,
                 currentDate.getFullYear() === year && styles.pickerItemActive,
               ]}
               onPress={() => selectYear(year)}
@@ -164,7 +176,7 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
       <View style={styles.weekDaysRow}>
         {WEEK_DAYS.map((day, idx) => (
           <View key={idx} style={styles.weekDayCell}>
-            <Text style={styles.weekDayText}>{day}</Text>
+            <Text style={styles.weekDayText}>{IS_SMALL_SCREEN ? day.charAt(0) : day}</Text>
           </View>
         ))}
       </View>
@@ -226,22 +238,24 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    padding: IS_SMALL_SCREEN ? 12 : 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
+    gap: 8,
   },
   navButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 6,
+    flexShrink: 0,
   },
   navBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: IS_SMALL_SCREEN ? 32 : 36,
+    height: IS_SMALL_SCREEN ? 32 : 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -254,38 +268,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBgDark,
     ...neuStyles.buttonPressed,
   },
+  selectors: {
+    flexDirection: 'row',
+    gap: 6,
+    flexShrink: 1,
+  },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 14,
+    gap: 4,
+    paddingVertical: IS_SMALL_SCREEN ? 8 : 10,
+    paddingHorizontal: IS_SMALL_SCREEN ? 10 : 14,
+    borderRadius: 10,
     ...neuStyles.selectorRaised,
     ...neuShadow.raisedSm,
+    maxWidth: IS_SMALL_SCREEN ? 80 : 120,
   },
   yearSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 14,
+    gap: 4,
+    paddingVertical: IS_SMALL_SCREEN ? 8 : 10,
+    paddingHorizontal: IS_SMALL_SCREEN ? 10 : 14,
+    borderRadius: 10,
     ...neuStyles.selectorRaised,
     ...neuShadow.raisedSm,
   },
   selectorText: {
-    fontSize: 15,
+    fontSize: IS_SMALL_SCREEN ? 12 : 14,
     fontWeight: '500',
     color: colors.text,
   },
   pickerDropdown: {
     position: 'absolute',
-    top: 70,
-    left: 100,
-    right: 20,
+    top: IS_SMALL_SCREEN ? 55 : 65,
+    left: 12,
+    right: 12,
     backgroundColor: colors.cardBgLight,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 8,
     zIndex: 100,
     flexDirection: 'row',
@@ -294,18 +314,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  yearPickerDropdown: {
+    justifyContent: 'center',
+  },
   pickerItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 8,
-    minWidth: '30%',
+    minWidth: IS_SMALL_SCREEN ? '30%' : '32%',
+    flexGrow: 1,
+  },
+  yearPickerItem: {
+    minWidth: IS_SMALL_SCREEN ? '18%' : '18%',
   },
   pickerItemActive: {
     backgroundColor: colors.cardBgDark,
     ...neuStyles.buttonPressed,
   },
   pickerItemText: {
-    fontSize: 13,
+    fontSize: IS_SMALL_SCREEN ? 11 : 12,
     color: colors.textMuted,
     textAlign: 'center',
   },
@@ -315,15 +342,15 @@ const styles = StyleSheet.create({
   },
   weekDaysRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   weekDayCell: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   weekDayText: {
-    fontSize: 11,
+    fontSize: IS_SMALL_SCREEN ? 10 : 11,
     fontWeight: '600',
     color: colors.textMuted,
     letterSpacing: 0.5,
@@ -337,7 +364,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 2,
+    padding: 1,
   },
   dayCellMuted: {
     opacity: 0.35,
@@ -347,14 +374,14 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   dayInnerSelected: {
     backgroundColor: colors.cardBgDark,
     ...neuStyles.dateSelected,
   },
   dayText: {
-    fontSize: 14,
+    fontSize: IS_SMALL_SCREEN ? 12 : 14,
     fontWeight: '500',
     color: colors.text,
   },
@@ -371,14 +398,14 @@ const styles = StyleSheet.create({
   },
   dotsContainer: {
     flexDirection: 'row',
-    gap: 3,
-    marginTop: 3,
+    gap: 2,
+    marginTop: 2,
     position: 'absolute',
-    bottom: 4,
+    bottom: IS_SMALL_SCREEN ? 2 : 4,
   },
   dot: {
-    width: 5,
-    height: 5,
+    width: IS_SMALL_SCREEN ? 4 : 5,
+    height: IS_SMALL_SCREEN ? 4 : 5,
     borderRadius: 2.5,
   },
 });
