@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "SG App",
+    "welcome": "Welcome"
+  },
+  "header": {
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications",
+    "newEvent": "New event added for tomorrow",
+    "reminder": "Reminder: Meeting at 3PM",
+    "taskCompleted": "Task completed: Review docs",
+    "messages": "Messages",
+    "messagesSoon": "Messages coming soon!",
+    "settings": "Settings",
+    "settingsSoon": "Settings coming soon!",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "cancel": "Cancel"
+  },
+  "calendar": {
+    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "weekDays": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+    "weekDaysShort": ["S", "M", "T", "W", "T", "F", "S"]
+  },
+  "events": {
+    "title": "Upcoming Events",
+    "noEvents": "No events",
+    "addNew": "Add New Event",
+    "thisWeek": "This Week",
+    "today": "Today",
+    "thisMonth": "This Month"
+  },
+  "todos": {
+    "title": "ToDo List",
+    "noTasks": "No tasks",
+    "addNew": "Add New Item",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "all": "All"
+  },
+  "categories": {
+    "title": "Categories",
+    "all": "All",
+    "less": "Less",
+    "more": "more categories"
+  },
+  "social": {
+    "share": "Share",
+    "shareMessage": "Check out my schedule on SG App!"
+  },
+  "voice": {
+    "listening": "Listening...",
+    "tapToSpeak": "Tap to speak",
+    "eventAdded": "Event added!"
+  },
+  "modal": {
+    "addEvent": "Add Event",
+    "addTodo": "Add Task",
+    "eventTitle": "Event title",
+    "selectCategory": "Select category",
+    "selectTime": "Select time",
+    "todoText": "Task text",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "time": {
+    "am": "AM",
+    "pm": "PM"
+  }
+}

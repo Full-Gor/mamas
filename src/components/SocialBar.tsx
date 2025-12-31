@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Share, Platform } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 
 // Icônes SVG inline
@@ -32,11 +33,14 @@ interface SocialBarProps {
   shareMessage?: string;
 }
 
-export function SocialBar({ shareMessage = 'Check out my schedule on SG App!' }: SocialBarProps) {
+export function SocialBar({ shareMessage }: SocialBarProps) {
+  const { t } = useTranslation();
   const [pressedBtn, setPressedBtn] = useState<string | null>(null);
 
+  const message = shareMessage || t('social.shareMessage');
+
   const handleTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`;
     Linking.openURL(url);
   };
 
@@ -51,8 +55,8 @@ export function SocialBar({ shareMessage = 'Check out my schedule on SG App!' }:
   const handleShare = async () => {
     try {
       await Share.share({
-        message: shareMessage,
-        title: 'SG App',
+        message: message,
+        title: t('app.name'),
       });
     } catch (error) {
       console.log('Share error:', error);
@@ -98,7 +102,7 @@ export function SocialBar({ shareMessage = 'Check out my schedule on SG App!' }:
         onPress={handleShare}
         activeOpacity={1}
       >
-        <Text style={styles.shareText}>Share</Text>
+        <Text style={styles.shareText}>{t('social.share')}</Text>
         <ShareIcon color={colors.textMuted} size={16} />
       </TouchableOpacity>
     </View>

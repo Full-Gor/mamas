@@ -8,6 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { generateId } from '../utils/storage';
 import { formatDate } from '../utils/dateUtils';
@@ -20,6 +21,7 @@ interface AddTodoModalProps {
 }
 
 export function AddTodoModal({ visible, onClose, onAddTodo }: AddTodoModalProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
 
   const handleSubmit = () => {
@@ -43,7 +45,7 @@ export function AddTodoModal({ visible, onClose, onAddTodo }: AddTodoModalProps)
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Nouvelle tâche</Text>
+            <Text style={styles.headerTitle}>{t('modal.addTodo')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={24} color={colors.textMuted} />
             </TouchableOpacity>
@@ -51,12 +53,12 @@ export function AddTodoModal({ visible, onClose, onAddTodo }: AddTodoModalProps)
 
           {/* Input */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Tâche</Text>
+            <Text style={styles.label}>{t('modal.todoText')}</Text>
             <TextInput
               style={styles.input}
               value={text}
               onChangeText={setText}
-              placeholder="Ex: Appeler le médecin..."
+              placeholder="..."
               placeholderTextColor={colors.textDim}
               multiline
             />
@@ -68,7 +70,7 @@ export function AddTodoModal({ visible, onClose, onAddTodo }: AddTodoModalProps)
             onPress={handleSubmit}
             disabled={!text.trim()}
           >
-            <Text style={styles.submitBtnText}>Ajouter</Text>
+            <Text style={styles.submitBtnText}>{t('modal.save')}</Text>
           </TouchableOpacity>
         </View>
       </View>
