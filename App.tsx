@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     backgroundColor: colors.cardBg,
-    paddingBottom: 20,
-    paddingTop: 10,
+    paddingBottom: 34,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     ...neuShadow.raised,

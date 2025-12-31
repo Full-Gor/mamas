@@ -71,7 +71,8 @@
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "error": "Erreur"
   },
   "settings": {
     "language": "Langue"
@@ -114,6 +115,12 @@
     "tasks": "Tâches",
     "avgTimePerTask": "Temps moyen/tâche",
     "fastest": "Plus rapide",
-    "slowest": "Plus lent"
+    "slowest": "Plus lent",
+    "deleteProject": "Supprimer le projet",
+    "deleteProjectConfirm": "Voulez-vous vraiment supprimer ce projet ?",
+    "cannotDeleteLastProject": "Impossible de supprimer le dernier projet",
+    "deleteStep": "Supprimer l'étape",
+    "deleteStepConfirm": "Voulez-vous vraiment supprimer cette étape du workflow ?",
+    "cannotDeleteLastStep": "Impossible de supprimer la dernière étape"
   }
 }
