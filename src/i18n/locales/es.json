@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "SG App",
+    "welcome": "Bienvenido"
+  },
+  "header": {
+    "notifications": "Notificaciones",
+    "noNotifications": "Sin nuevas notificaciones",
+    "newEvent": "Nuevo evento añadido para mañana",
+    "reminder": "Recordatorio: Reunión a las 15h",
+    "taskCompleted": "Tarea completada: Revisar docs",
+    "messages": "Mensajes",
+    "messagesSoon": "¡Mensajes próximamente!",
+    "settings": "Configuración",
+    "settingsSoon": "¡Configuración próximamente!",
+    "logout": "Cerrar sesión",
+    "logoutConfirm": "¿Estás seguro de que quieres cerrar sesión?",
+    "cancel": "Cancelar"
+  },
+  "calendar": {
+    "months": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+    "monthsShort": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    "weekDays": ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"],
+    "weekDaysShort": ["D", "L", "M", "M", "J", "V", "S"]
+  },
+  "events": {
+    "title": "Próximos eventos",
+    "noEvents": "Sin eventos",
+    "addNew": "Añadir evento",
+    "thisWeek": "Esta semana",
+    "today": "Hoy",
+    "thisMonth": "Este mes"
+  },
+  "todos": {
+    "title": "Lista de tareas",
+    "noTasks": "Sin tareas",
+    "addNew": "Añadir tarea",
+    "today": "Hoy",
+    "thisWeek": "Esta semana",
+    "all": "Todo"
+  },
+  "categories": {
+    "title": "Categorías",
+    "all": "Todo",
+    "less": "Menos",
+    "more": "más categorías"
+  },
+  "social": {
+    "share": "Compartir",
+    "shareMessage": "¡Mira mi agenda en SG App!"
+  },
+  "voice": {
+    "listening": "Escuchando...",
+    "tapToSpeak": "Toca para hablar",
+    "eventAdded": "¡Evento añadido!"
+  },
+  "modal": {
+    "addEvent": "Añadir evento",
+    "addTodo": "Añadir tarea",
+    "eventTitle": "Título del evento",
+    "selectCategory": "Seleccionar categoría",
+    "selectTime": "Seleccionar hora",
+    "todoText": "Texto de la tarea",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "time": {
+    "am": "AM",
+    "pm": "PM"
+  }
+}

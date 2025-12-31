@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "SG App",
+    "welcome": "Bienvenue"
+  },
+  "header": {
+    "notifications": "Notifications",
+    "noNotifications": "Aucune nouvelle notification",
+    "newEvent": "Nouvel événement ajouté pour demain",
+    "reminder": "Rappel : Réunion à 15h",
+    "taskCompleted": "Tâche terminée : Réviser les docs",
+    "messages": "Messages",
+    "messagesSoon": "Messages bientôt disponibles !",
+    "settings": "Paramètres",
+    "settingsSoon": "Paramètres bientôt disponibles !",
+    "logout": "Déconnexion",
+    "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "cancel": "Annuler"
+  },
+  "calendar": {
+    "months": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+    "monthsShort": ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"],
+    "weekDays": ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"],
+    "weekDaysShort": ["D", "L", "M", "M", "J", "V", "S"]
+  },
+  "events": {
+    "title": "Événements à venir",
+    "noEvents": "Aucun événement",
+    "addNew": "Ajouter un événement",
+    "thisWeek": "Cette semaine",
+    "today": "Aujourd'hui",
+    "thisMonth": "Ce mois"
+  },
+  "todos": {
+    "title": "Liste de tâches",
+    "noTasks": "Aucune tâche",
+    "addNew": "Ajouter une tâche",
+    "today": "Aujourd'hui",
+    "thisWeek": "Cette semaine",
+    "all": "Tout"
+  },
+  "categories": {
+    "title": "Catégories",
+    "all": "Tout",
+    "less": "Moins",
+    "more": "autres catégories"
+  },
+  "social": {
+    "share": "Partager",
+    "shareMessage": "Découvrez mon planning sur SG App !"
+  },
+  "voice": {
+    "listening": "Écoute en cours...",
+    "tapToSpeak": "Appuyez pour parler",
+    "eventAdded": "Événement ajouté !"
+  },
+  "modal": {
+    "addEvent": "Ajouter un événement",
+    "addTodo": "Ajouter une tâche",
+    "eventTitle": "Titre de l'événement",
+    "selectCategory": "Choisir une catégorie",
+    "selectTime": "Choisir l'heure",
+    "todoText": "Texte de la tâche",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "time": {
+    "am": "AM",
+    "pm": "PM"
+  }
+}

@@ -40,6 +40,13 @@
           "microphonePermission": "Cette app utilise le microphone pour la reconnaissance vocale.",
           "speechRecognitionPermission": "Cette app utilise la reconnaissance vocale pour créer des événements."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#4ade80"
+        }
       ]
     ]
   }

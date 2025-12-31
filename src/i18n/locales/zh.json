@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "SG App",
+    "welcome": "欢迎"
+  },
+  "header": {
+    "notifications": "通知",
+    "noNotifications": "没有新通知",
+    "newEvent": "明天添加了新事件",
+    "reminder": "提醒：下午3点开会",
+    "taskCompleted": "任务完成：审阅文档",
+    "messages": "消息",
+    "messagesSoon": "消息功能即将推出！",
+    "settings": "设置",
+    "settingsSoon": "设置功能即将推出！",
+    "logout": "退出登录",
+    "logoutConfirm": "确定要退出登录吗？",
+    "cancel": "取消"
+  },
+  "calendar": {
+    "months": ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
+    "monthsShort": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+    "weekDays": ["周日", "周一", "周二", "周三", "周四", "周五", "周六"],
+    "weekDaysShort": ["日", "一", "二", "三", "四", "五", "六"]
+  },
+  "events": {
+    "title": "即将到来的事件",
+    "noEvents": "没有事件",
+    "addNew": "添加事件",
+    "thisWeek": "本周",
+    "today": "今天",
+    "thisMonth": "本月"
+  },
+  "todos": {
+    "title": "待办事项",
+    "noTasks": "没有任务",
+    "addNew": "添加任务",
+    "today": "今天",
+    "thisWeek": "本周",
+    "all": "全部"
+  },
+  "categories": {
+    "title": "分类",
+    "all": "全部",
+    "less": "收起",
+    "more": "个其他分类"
+  },
+  "social": {
+    "share": "分享",
+    "shareMessage": "在SG App上查看我的日程！"
+  },
+  "voice": {
+    "listening": "正在聆听...",
+    "tapToSpeak": "点击说话",
+    "eventAdded": "事件已添加！"
+  },
+  "modal": {
+    "addEvent": "添加事件",
+    "addTodo": "添加任务",
+    "eventTitle": "事件标题",
+    "selectCategory": "选择分类",
+    "selectTime": "选择时间",
+    "todoText": "任务内容",
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "time": {
+    "am": "上午",
+    "pm": "下午"
+  }
+}

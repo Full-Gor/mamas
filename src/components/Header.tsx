@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -19,6 +20,7 @@ export function Header({
   userName = 'User',
   notificationCount = 3,
 }: HeaderProps) {
+  const { t } = useTranslation();
   const [btnPressed, setBtnPressed] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -34,7 +36,7 @@ export function Header({
     if (onSettingsPress) {
       onSettingsPress();
     } else {
-      Alert.alert('Settings', 'Settings screen coming soon!');
+      Alert.alert(t('header.settings'), t('header.settingsSoon'));
     }
   };
 
@@ -46,7 +48,7 @@ export function Header({
       {/* Logo */}
       <View style={styles.logo}>
         <View style={styles.logoIcon}>
-          <Text style={styles.logoText}>NC</Text>
+          <Text style={styles.logoText}>SG</Text>
           {/* Badge notification sur l'icône app */}
           {notificationCount > 0 && (
             <View style={styles.logoBadge}>
@@ -57,14 +59,14 @@ export function Header({
           )}
         </View>
         {!IS_SMALL_SCREEN && (
-          <Text style={styles.logoTitle}>NeuCalendar</Text>
+          <Text style={styles.logoTitle}>{t('app.name')}</Text>
         )}
       </View>
 
       {/* Right side */}
       <View style={styles.headerRight}>
         <Text style={styles.welcomeText} numberOfLines={1}>
-          Welcome, {displayName}
+          {t('app.welcome')}, {displayName}
         </Text>
 
         {/* Avatar */}
@@ -101,7 +103,7 @@ export function Header({
           ]}
           onPressIn={() => setBtnPressed('mail')}
           onPressOut={() => setBtnPressed(null)}
-          onPress={() => Alert.alert('Messages', 'Messages coming soon!')}
+          onPress={() => Alert.alert(t('header.messages'), t('header.messagesSoon'))}
           activeOpacity={1}
         >
           <Feather name="mail" size={18} color={colors.textMuted} />
@@ -115,9 +117,9 @@ export function Header({
           ]}
           onPressIn={() => setBtnPressed('power')}
           onPressOut={() => setBtnPressed(null)}
-          onPress={() => Alert.alert('Logout', 'Are you sure you want to logout?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Logout', style: 'destructive' },
+          onPress={() => Alert.alert(t('header.logout'), t('header.logoutConfirm'), [
+            { text: t('header.cancel'), style: 'cancel' },
+            { text: t('header.logout'), style: 'destructive' },
           ])}
           activeOpacity={1}
         >
@@ -128,26 +130,26 @@ export function Header({
       {/* Notifications dropdown */}
       {showNotifications && (
         <View style={styles.notificationsDropdown}>
-          <Text style={styles.notifTitle}>Notifications</Text>
+          <Text style={styles.notifTitle}>{t('header.notifications')}</Text>
           {notificationCount > 0 ? (
             <>
               <TouchableOpacity style={styles.notifItem}>
                 <View style={[styles.notifDot, { backgroundColor: colors.accent }]} />
-                <Text style={styles.notifText}>New event added for tomorrow</Text>
+                <Text style={styles.notifText}>{t('header.newEvent')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.notifItem}>
                 <View style={[styles.notifDot, { backgroundColor: colors.blue }]} />
-                <Text style={styles.notifText}>Reminder: Meeting at 3PM</Text>
+                <Text style={styles.notifText}>{t('header.reminder')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.notifItem}>
                 <View style={[styles.notifDot, { backgroundColor: colors.orange }]} />
-                <Text style={styles.notifText}>Task completed: Review docs</Text>
+                <Text style={styles.notifText}>{t('header.taskCompleted')}</Text>
               </TouchableOpacity>
             </>
           ) : (
             <View style={styles.notifItem}>
               <View style={styles.notifDot} />
-              <Text style={styles.notifText}>No new notifications</Text>
+              <Text style={styles.notifText}>{t('header.noNotifications')}</Text>
             </View>
           )}
         </View>
