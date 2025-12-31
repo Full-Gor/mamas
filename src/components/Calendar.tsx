@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
-import { getCalendarDays, getMonthName, formatDate, isToday } from '../utils/dateUtils';
+import { getCalendarDays, formatDate, isToday } from '../utils/dateUtils';
 import type { Event } from '../types';
 import { getCategoryById } from '../data/categories';
 
@@ -16,16 +17,19 @@ interface CalendarProps {
   onSelectDate: (date: string) => void;
 }
 
-const WEEK_DAYS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [navPressed, setNavPressed] = useState<'prev' | 'next' | null>(null);
+
+  // Translated arrays
+  const weekDays = t('calendar.weekDays', { returnObjects: true }) as string[];
+  const months = t('calendar.months', { returnObjects: true }) as string[];
+  const monthsShort = t('calendar.monthsShort', { returnObjects: true }) as string[];
 
   const days = useMemo(() => {
     return getCalendarDays(currentDate.getFullYear(), currentDate.getMonth());
@@ -61,8 +65,8 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
 
   // Nom du mois adapté à la taille de l'écran
   const monthName = IS_SMALL_SCREEN
-    ? MONTHS[currentDate.getMonth()]
-    : getMonthName(currentDate.getMonth());
+    ? monthsShort[currentDate.getMonth()]
+    : months[currentDate.getMonth()];
 
   return (
     <NeuCard style={styles.container}>
@@ -128,9 +132,9 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
       {/* Dropdown Mois */}
       {showMonthPicker && (
         <View style={styles.pickerDropdown}>
-          {MONTHS_FULL.map((month, idx) => (
+          {months.map((month, idx) => (
             <TouchableOpacity
-              key={month}
+              key={idx}
               style={[
                 styles.pickerItem,
                 currentDate.getMonth() === idx && styles.pickerItemActive,
@@ -141,7 +145,7 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
                 styles.pickerItemText,
                 currentDate.getMonth() === idx && styles.pickerItemTextActive,
               ]}>
-                {IS_SMALL_SCREEN ? MONTHS[idx] : month}
+                {IS_SMALL_SCREEN ? monthsShort[idx] : month}
               </Text>
             </TouchableOpacity>
           ))}
@@ -174,9 +178,9 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
 
       {/* En-tête des jours de la semaine */}
       <View style={styles.weekDaysRow}>
-        {WEEK_DAYS.map((day, idx) => (
+        {weekDays.map((day, idx) => (
           <View key={idx} style={styles.weekDayCell}>
-            <Text style={styles.weekDayText}>{IS_SMALL_SCREEN ? day.charAt(0) : day}</Text>
+            <Text style={styles.weekDayText}>{day}</Text>
           </View>
         ))}
       </View>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
 import type { Event } from '../types';
@@ -14,15 +15,16 @@ interface EventsCardProps {
 
 type FilterType = 'week' | 'today' | 'month';
 
-const FILTER_LABELS: Record<FilterType, string> = {
-  week: 'This Week',
-  today: 'Today',
-  month: 'This Month',
-};
-
 export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterType>('week');
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const FILTER_LABELS: Record<FilterType, string> = {
+    week: t('events.thisWeek'),
+    today: t('events.today'),
+    month: t('events.thisMonth'),
+  };
 
   // Filtrer les événements selon le filtre
   const filteredEvents = events.slice(0, 5);
@@ -35,7 +37,7 @@ export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps
   return (
     <NeuCard>
       <View style={styles.header}>
-        <Text style={styles.title}>Upcoming Events</Text>
+        <Text style={styles.title}>{t('events.title')}</Text>
         <TouchableOpacity
           style={styles.dropdown}
           onPress={() => setShowDropdown(!showDropdown)}
@@ -69,7 +71,7 @@ export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps
       )}
 
       {filteredEvents.length === 0 ? (
-        <Text style={styles.emptyText}>No events</Text>
+        <Text style={styles.emptyText}>{t('events.noEvents')}</Text>
       ) : (
         filteredEvents.map((event) => {
           const category = getCategoryById(event.categoryId);
@@ -95,7 +97,7 @@ export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps
 
       <TouchableOpacity style={styles.addBtn} onPress={onAddEvent}>
         <Feather name="plus" size={14} color={colors.textMuted} />
-        <Text style={styles.addBtnText}>Add New Event</Text>
+        <Text style={styles.addBtnText}>{t('events.addNew')}</Text>
       </TouchableOpacity>
     </NeuCard>
   );

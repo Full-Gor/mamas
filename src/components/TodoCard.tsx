@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
 import type { Todo } from '../types';
@@ -13,15 +14,16 @@ interface TodoCardProps {
 
 type FilterType = 'today' | 'week' | 'all';
 
-const FILTER_LABELS: Record<FilterType, string> = {
-  today: 'Today',
-  week: 'This Week',
-  all: 'All',
-};
-
 export function TodoCard({ todos, onToggleTodo, onAddTodo }: TodoCardProps) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterType>('today');
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const FILTER_LABELS: Record<FilterType, string> = {
+    today: t('todos.today'),
+    week: t('todos.thisWeek'),
+    all: t('todos.all'),
+  };
 
   const todayTodos = todos.slice(0, 5);
 
@@ -33,7 +35,7 @@ export function TodoCard({ todos, onToggleTodo, onAddTodo }: TodoCardProps) {
   return (
     <NeuCard>
       <View style={styles.header}>
-        <Text style={styles.title}>ToDo List</Text>
+        <Text style={styles.title}>{t('todos.title')}</Text>
         <TouchableOpacity
           style={styles.dropdown}
           onPress={() => setShowDropdown(!showDropdown)}
@@ -67,7 +69,7 @@ export function TodoCard({ todos, onToggleTodo, onAddTodo }: TodoCardProps) {
       )}
 
       {todayTodos.length === 0 ? (
-        <Text style={styles.emptyText}>No tasks</Text>
+        <Text style={styles.emptyText}>{t('todos.noTasks')}</Text>
       ) : (
         todayTodos.map((todo) => (
           <TouchableOpacity
@@ -96,7 +98,7 @@ export function TodoCard({ todos, onToggleTodo, onAddTodo }: TodoCardProps) {
 
       <TouchableOpacity style={styles.addBtn} onPress={onAddTodo}>
         <Feather name="plus" size={14} color={colors.textMuted} />
-        <Text style={styles.addBtnText}>Add New Item</Text>
+        <Text style={styles.addBtnText}>{t('todos.addNew')}</Text>
       </TouchableOpacity>
     </NeuCard>
   );

@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow } from '../theme/colors';
 import { categories } from '../data/categories';
 import { generateId } from '../utils/storage';
@@ -25,6 +26,7 @@ interface AddEventModalProps {
 }
 
 export function AddEventModal({ visible, onClose, onAddEvent, selectedDate }: AddEventModalProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('09:00');
   const [selectedCategory, setSelectedCategory] = useState<Category>(categories[0]);
@@ -64,7 +66,7 @@ export function AddEventModal({ visible, onClose, onAddEvent, selectedDate }: Ad
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Nouvel événement</Text>
+            <Text style={styles.headerTitle}>{t('modal.addEvent')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={24} color={colors.textMuted} />
             </TouchableOpacity>
@@ -78,19 +80,19 @@ export function AddEventModal({ visible, onClose, onAddEvent, selectedDate }: Ad
 
           {/* Titre */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Titre</Text>
+            <Text style={styles.label}>{t('modal.eventTitle')}</Text>
             <TextInput
               style={styles.input}
               value={title}
               onChangeText={setTitle}
-              placeholder="Ex: Dentiste, Réunion..."
+              placeholder="..."
               placeholderTextColor={colors.textDim}
             />
           </View>
 
           {/* Heure */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Heure</Text>
+            <Text style={styles.label}>{t('modal.selectTime')}</Text>
             <TextInput
               style={styles.input}
               value={time}
@@ -102,7 +104,7 @@ export function AddEventModal({ visible, onClose, onAddEvent, selectedDate }: Ad
 
           {/* Catégorie */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Catégorie</Text>
+            <Text style={styles.label}>{t('modal.selectCategory')}</Text>
             <TouchableOpacity
               style={[styles.categoryBtn, { borderColor: selectedCategory.color }]}
               onPress={() => setShowCategories(!showCategories)}
@@ -148,7 +150,7 @@ export function AddEventModal({ visible, onClose, onAddEvent, selectedDate }: Ad
             onPress={handleSubmit}
             disabled={!title.trim()}
           >
-            <Text style={styles.submitBtnText}>Ajouter</Text>
+            <Text style={styles.submitBtnText}>{t('modal.save')}</Text>
           </TouchableOpacity>
         </View>
       </View>

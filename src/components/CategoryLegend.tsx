@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
 import { categories } from '../data/categories';
@@ -11,6 +12,7 @@ interface CategoryLegendProps {
 }
 
 export function CategoryLegend({ onSelectCategory, selectedCategory }: CategoryLegendProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   // Afficher seulement 8 catégories par défaut, toutes si expanded
@@ -19,12 +21,12 @@ export function CategoryLegend({ onSelectCategory, selectedCategory }: CategoryL
   return (
     <NeuCard style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Categories</Text>
+        <Text style={styles.title}>{t('categories.title')}</Text>
         <TouchableOpacity
           style={styles.expandBtn}
           onPress={() => setExpanded(!expanded)}
         >
-          <Text style={styles.expandBtnText}>{expanded ? 'Less' : 'All'}</Text>
+          <Text style={styles.expandBtnText}>{expanded ? t('categories.less') : t('categories.all')}</Text>
           <Feather
             name={expanded ? 'chevron-up' : 'chevron-down'}
             size={14}
@@ -70,7 +72,7 @@ export function CategoryLegend({ onSelectCategory, selectedCategory }: CategoryL
 
       {!expanded && categories.length > 8 && (
         <Text style={styles.moreText}>
-          +{categories.length - 8} more categories
+          +{categories.length - 8} {t('categories.more')}
         </Text>
       )}
     </NeuCard>
