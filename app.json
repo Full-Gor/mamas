@@ -4,7 +4,7 @@
     "slug": "sg-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/sg-logo.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": false,
     "splash": {
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/sg-logo.png",
         "backgroundColor": "#1a1a1f"
       },
       "edgeToEdgeEnabled": true,
