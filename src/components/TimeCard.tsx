@@ -27,10 +27,18 @@ export function TimeCard() {
     return `${dayName}, ${date.getDate()} ${monthName} ${date.getFullYear()}`;
   };
 
+  // Soleil entre 6h et 18h, sinon lune
+  const hour = currentTime.getHours();
+  const isDaytime = hour >= 6 && hour < 18;
+
   return (
     <View style={styles.container}>
-      <View style={styles.moonContainer}>
-        <Feather name="moon" size={24} color={colors.yellow} />
+      <View style={[styles.iconContainer, isDaytime && styles.sunContainer]}>
+        <Feather
+          name={isDaytime ? "sun" : "moon"}
+          size={24}
+          color={isDaytime ? colors.orange : colors.yellow}
+        />
       </View>
       <View>
         <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
@@ -53,13 +61,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...neuShadow.raised,
   },
-  moonContainer: {
+  iconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: '#252530',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sunContainer: {
+    backgroundColor: '#3d3520',
   },
   timeText: {
     fontSize: 18,

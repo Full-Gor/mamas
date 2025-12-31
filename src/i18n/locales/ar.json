@@ -73,6 +73,9 @@
     "save": "حفظ",
     "delete": "حذف"
   },
+  "settings": {
+    "language": "اللغة"
+  },
   "rush": {
     "createRush": "إنشاء Rush",
     "rushName": "اسم Rush",

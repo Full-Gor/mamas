@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   Dimensions,
+  Animated,
+  Vibration,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
@@ -46,6 +48,45 @@ export function RushScreen() {
   const [notesText, setNotesText] = useState('');
   const [showAddProject, setShowAddProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [blinkingProjectId, setBlinkingProjectId] = useState<string | null>(null);
+  const [timerAlert, setTimerAlert] = useState(false);
+
+  // Blinking animation
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+
+  // Blinking effect for next project
+  useEffect(() => {
+    if (blinkingProjectId) {
+      const blink = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blinkAnim, {
+            toValue: 0.3,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(blinkAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      blink.start();
+      Vibration.vibrate([0, 200, 100, 200]); // Double vibration
+      return () => blink.stop();
+    } else {
+      blinkAnim.setValue(1);
+    }
+  }, [blinkingProjectId]);
+
+  // Timer alert blinking
+  useEffect(() => {
+    if (timerAlert) {
+      const timeout = setTimeout(() => setTimerAlert(false), 5000);
+      Vibration.vibrate([0, 500, 200, 500]);
+      return () => clearTimeout(timeout);
+    }
+  }, [timerAlert]);
 
   // Load rushes on mount
   useEffect(() => {
@@ -71,6 +112,31 @@ export function RushScreen() {
 
   const activeRush = rushes.find(r => r.id === activeRushId);
   const activeProject = activeRush?.projects.find(p => p.id === activeRush.activeProjectId);
+
+  // Check timer limits
+  useEffect(() => {
+    if (!activeRush || !activeProject || activeRush.status === 'paused') return;
+
+    const currentStep = activeRush.workflow[activeProject.currentStepIndex];
+    if (!currentStep?.timeLimit || !activeProject.currentSessionStart) return;
+
+    const timeLimitValue = currentStep.timeLimit;
+
+    const checkTimer = () => {
+      const elapsed = Math.floor(
+        (Date.now() - new Date(activeProject.currentSessionStart!).getTime()) / 1000
+      );
+      const totalElapsed = activeProject.tasks[activeProject.currentStepIndex]?.timeSpent || 0;
+      const timeLimitSeconds = timeLimitValue * 60;
+
+      if (elapsed + totalElapsed >= timeLimitSeconds && !timerAlert) {
+        setTimerAlert(true);
+      }
+    };
+
+    const interval = setInterval(checkTimer, 1000);
+    return () => clearInterval(interval);
+  }, [activeRush, activeProject, timerAlert]);
 
   // Handlers
   const handleCreateRush = async (rush: Rush) => {
@@ -104,6 +170,20 @@ export function RushScreen() {
     const updated = completeTask(activeRush, activeProject.id);
     const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
     await updateRushes(newRushes);
+
+    // Find next incomplete project and trigger blinking
+    const currentProjectIndex = updated.projects.findIndex(p => p.id === activeProject.id);
+    const nextProject = updated.projects.find((p, idx) =>
+      idx > currentProjectIndex && p.currentStepIndex < updated.workflow.length
+    ) || updated.projects.find((p, idx) =>
+      idx < currentProjectIndex && p.currentStepIndex < updated.workflow.length
+    );
+
+    if (nextProject && nextProject.id !== activeProject.id) {
+      setBlinkingProjectId(nextProject.id);
+      // Auto-stop blinking after 5 seconds
+      setTimeout(() => setBlinkingProjectId(null), 5000);
+    }
   };
 
   const handleSkipTask = async () => {
@@ -236,32 +316,54 @@ export function RushScreen() {
         ) : (
           <>
             {/* Timer Card */}
-            <NeuCard style={styles.timerCard}>
-              <View style={styles.timerHeader}>
-                <Text style={styles.rushName}>{activeRush.name}</Text>
-                <TouchableOpacity onPress={() => setShowStatsModal(true)}>
-                  <Feather name="bar-chart-2" size={20} color={colors.textMuted} />
-                </TouchableOpacity>
-              </View>
+            <Animated.View
+              style={timerAlert ? {
+                shadowColor: colors.orange,
+                shadowOpacity: 0.8,
+                shadowRadius: 10,
+              } : undefined}
+            >
+              <NeuCard style={timerAlert ? [styles.timerCard, styles.timerCardAlert] : styles.timerCard}>
+                <View style={styles.timerHeader}>
+                  <Text style={styles.rushName}>{activeRush.name}</Text>
+                  <View style={styles.timerHeaderRight}>
+                    {timerAlert && (
+                      <Feather name="alert-triangle" size={20} color={colors.orange} />
+                    )}
+                    <TouchableOpacity onPress={() => setShowStatsModal(true)}>
+                      <Feather name="bar-chart-2" size={20} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
-              <RushTimer
-                startTime={activeProject?.currentSessionStart}
-                initialSeconds={activeProject?.totalTimeSpent || 0}
-                isPaused={activeRush.status === 'paused'}
-                onPause={handleTogglePause}
-                onResume={handleTogglePause}
-                size="large"
-                accentColor={activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent}
-              />
+                <RushTimer
+                  startTime={activeProject?.currentSessionStart}
+                  initialSeconds={activeProject?.totalTimeSpent || 0}
+                  isPaused={activeRush.status === 'paused'}
+                  onPause={handleTogglePause}
+                  onResume={handleTogglePause}
+                  size="large"
+                  accentColor={timerAlert ? colors.orange : (activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent)}
+                />
 
-              {/* Total Rush Time */}
-              <View style={styles.totalTimeRow}>
-                <Text style={styles.totalTimeLabel}>{t('rush.totalTime')}</Text>
-                <Text style={styles.totalTimeValue}>
-                  {formatTimeVerbose(activeRush.totalTimeSpent)}
-                </Text>
-              </View>
-            </NeuCard>
+                {/* Total Rush Time */}
+                <View style={styles.totalTimeRow}>
+                  <Text style={styles.totalTimeLabel}>{t('rush.totalTime')}</Text>
+                  <Text style={styles.totalTimeValue}>
+                    {formatTimeVerbose(activeRush.totalTimeSpent)}
+                  </Text>
+                </View>
+
+                {timerAlert && (
+                  <TouchableOpacity
+                    style={styles.dismissAlertBtn}
+                    onPress={() => setTimerAlert(false)}
+                  >
+                    <Text style={styles.dismissAlertText}>OK</Text>
+                  </TouchableOpacity>
+                )}
+              </NeuCard>
+            </Animated.View>
 
             {/* Projects */}
             <View style={styles.sectionHeader}>
@@ -293,16 +395,24 @@ export function RushScreen() {
             >
               {activeRush.projects.map((project) => {
                 const isActive = project.id === activeRush.activeProjectId;
+                const isBlinking = project.id === blinkingProjectId;
                 const completedTasks = project.tasks.filter(
                   t => t.status === 'completed' || t.status === 'skipped'
                 ).length;
                 const progress = (completedTasks / project.tasks.length) * 100;
 
-                return (
+                const projectCard = (
                   <TouchableOpacity
                     key={project.id}
-                    style={[styles.projectCard, isActive && styles.projectCardActive]}
-                    onPress={() => handleSelectProject(project.id)}
+                    style={[
+                      styles.projectCard,
+                      isActive && styles.projectCardActive,
+                      isBlinking && styles.projectCardBlinking,
+                    ]}
+                    onPress={() => {
+                      handleSelectProject(project.id);
+                      if (isBlinking) setBlinkingProjectId(null);
+                    }}
                     onLongPress={() => {
                       setEditingNotes({ projectId: project.id });
                       setNotesText(project.notes || '');
@@ -331,6 +441,16 @@ export function RushScreen() {
                     )}
                   </TouchableOpacity>
                 );
+
+                // Wrap blinking project in Animated.View
+                if (isBlinking) {
+                  return (
+                    <Animated.View key={project.id} style={{ opacity: blinkAnim }}>
+                      {projectCard}
+                    </Animated.View>
+                  );
+                }
+                return projectCard;
               })}
             </ScrollView>
 
@@ -663,6 +783,27 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
+  timerHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  timerCardAlert: {
+    borderWidth: 2,
+    borderColor: colors.orange,
+  },
+  dismissAlertBtn: {
+    marginTop: 16,
+    backgroundColor: colors.orange,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  dismissAlertText: {
+    color: colors.background,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   rushName: {
     fontSize: 18,
     fontWeight: '600',
@@ -736,6 +877,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBg,
     borderWidth: 1,
     borderColor: colors.accent,
+  },
+  projectCardBlinking: {
+    borderWidth: 2,
+    borderColor: colors.orange,
+    backgroundColor: colors.cardBg,
   },
   projectName: {
     fontSize: 13,
