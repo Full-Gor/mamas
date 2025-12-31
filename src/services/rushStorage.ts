@@ -604,3 +604,62 @@ export function updateRushName(rush: Rush, name: string): Rush {
 export function deleteRush(rushes: Rush[], rushId: string): Rush[] {
   return rushes.filter(r => r.id !== rushId);
 }
+
+// ==================== REORDERING ====================
+
+export function reorderRushes(rushes: Rush[], fromIndex: number, toIndex: number): Rush[] {
+  if (fromIndex === toIndex) return rushes;
+  const result = [...rushes];
+  const [removed] = result.splice(fromIndex, 1);
+  result.splice(toIndex, 0, removed);
+  return result;
+}
+
+export function reorderProjects(rush: Rush, fromIndex: number, toIndex: number): Rush {
+  if (fromIndex === toIndex) return rush;
+  const projects = [...rush.projects];
+  const [removed] = projects.splice(fromIndex, 1);
+  projects.splice(toIndex, 0, removed);
+  return {
+    ...rush,
+    projects,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function moveWorkflowStep(rush: Rush, fromIndex: number, toIndex: number): Rush {
+  if (fromIndex === toIndex) return rush;
+
+  // Move workflow step
+  const workflow = [...rush.workflow];
+  const [removedStep] = workflow.splice(fromIndex, 1);
+  workflow.splice(toIndex, 0, removedStep);
+  // Update order property
+  const updatedWorkflow = workflow.map((s, i) => ({ ...s, order: i }));
+
+  // Move corresponding tasks in all projects
+  const updatedProjects = rush.projects.map(p => {
+    const tasks = [...p.tasks];
+    const [removedTask] = tasks.splice(fromIndex, 1);
+    tasks.splice(toIndex, 0, removedTask);
+
+    // Adjust currentStepIndex
+    let newStepIndex = p.currentStepIndex;
+    if (p.currentStepIndex === fromIndex) {
+      newStepIndex = toIndex;
+    } else if (fromIndex < p.currentStepIndex && toIndex >= p.currentStepIndex) {
+      newStepIndex = p.currentStepIndex - 1;
+    } else if (fromIndex > p.currentStepIndex && toIndex <= p.currentStepIndex) {
+      newStepIndex = p.currentStepIndex + 1;
+    }
+
+    return { ...p, tasks, currentStepIndex: newStepIndex };
+  });
+
+  return {
+    ...rush,
+    workflow: updatedWorkflow,
+    projects: updatedProjects,
+    updatedAt: new Date().toISOString(),
+  };
+}

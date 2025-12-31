@@ -32,6 +32,11 @@ import {
   formatTimeVerbose,
   deleteRush,
   addProjectToRush,
+  removeProjectFromRush,
+  removeStepFromWorkflow,
+  reorderRushes,
+  reorderProjects,
+  moveWorkflowStep,
 } from '../services/rushStorage';
 import type { Rush, RushProject, RushStats } from '../types/rush';
 import { RUSH_COLORS } from '../types/rush';
@@ -50,6 +55,7 @@ export function RushScreen() {
   const [newProjectName, setNewProjectName] = useState('');
   const [blinkingProjectId, setBlinkingProjectId] = useState<string | null>(null);
   const [timerAlert, setTimerAlert] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // Blinking animation
   const blinkAnim = useRef(new Animated.Value(1)).current;
@@ -232,6 +238,78 @@ export function RushScreen() {
     setShowAddProject(false);
   };
 
+  // Reordering handlers
+  const handleMoveRush = async (fromIndex: number, direction: 'up' | 'down') => {
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= rushes.length) return;
+    const newRushes = reorderRushes(rushes, fromIndex, toIndex);
+    await updateRushes(newRushes);
+  };
+
+  const handleMoveProject = async (fromIndex: number, direction: 'left' | 'right') => {
+    if (!activeRush) return;
+    const toIndex = direction === 'left' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= activeRush.projects.length) return;
+    const updated = reorderProjects(activeRush, fromIndex, toIndex);
+    const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+    await updateRushes(newRushes);
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!activeRush || activeRush.projects.length <= 1) {
+      Alert.alert(t('common.error'), t('rush.cannotDeleteLastProject'));
+      return;
+    }
+    Alert.alert(
+      t('rush.deleteProject'),
+      t('rush.deleteProjectConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            const updated = removeProjectFromRush(activeRush, projectId);
+            const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+            await updateRushes(newRushes);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleMoveStep = async (fromIndex: number, direction: 'up' | 'down') => {
+    if (!activeRush) return;
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= activeRush.workflow.length) return;
+    const updated = moveWorkflowStep(activeRush, fromIndex, toIndex);
+    const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+    await updateRushes(newRushes);
+  };
+
+  const handleDeleteStep = async (stepIndex: number) => {
+    if (!activeRush || activeRush.workflow.length <= 1) {
+      Alert.alert(t('common.error'), t('rush.cannotDeleteLastStep'));
+      return;
+    }
+    Alert.alert(
+      t('rush.deleteStep'),
+      t('rush.deleteStepConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            const updated = removeStepFromWorkflow(activeRush, stepIndex);
+            const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+            await updateRushes(newRushes);
+          },
+        },
+      ]
+    );
+  };
+
   const stats = activeRush ? getRushStats(activeRush) : null;
 
   return (
@@ -244,12 +322,20 @@ export function RushScreen() {
           <Feather name="zap" size={24} color={colors.accent} />
           <Text style={styles.headerTitle}>Rush Mode</Text>
         </View>
-        <TouchableOpacity
-          style={styles.addRushBtn}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <Feather name="plus" size={20} color={colors.text} />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={[styles.editModeBtn, editMode && styles.editModeBtnActive]}
+            onPress={() => setEditMode(!editMode)}
+          >
+            <Feather name="edit-2" size={18} color={editMode ? colors.accent : colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addRushBtn}
+            onPress={() => setShowCreateModal(true)}
+          >
+            <Feather name="plus" size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Rush Tabs */}
@@ -260,34 +346,60 @@ export function RushScreen() {
           style={styles.tabsContainer}
           contentContainerStyle={styles.tabsContent}
         >
-          {rushes.map((rush) => {
+          {rushes.map((rush, rushIndex) => {
             const isActive = rush.id === activeRushId;
             const rushColor = rush.color ? RUSH_COLORS[rush.color] : colors.accent;
             return (
-              <TouchableOpacity
-                key={rush.id}
-                style={[
-                  styles.rushTab,
-                  isActive && styles.rushTabActive,
-                  isActive && { borderBottomColor: rushColor },
-                ]}
-                onPress={() => setActiveRushId(rush.id)}
-                onLongPress={() => handleDeleteRush(rush.id)}
-              >
-                <View style={[styles.tabDot, { backgroundColor: rushColor }]} />
-                <Text
-                  style={[styles.tabText, isActive && styles.tabTextActive]}
-                  numberOfLines={1}
+              <View key={rush.id} style={styles.rushTabWrapper}>
+                {editMode && rushIndex > 0 && (
+                  <TouchableOpacity
+                    style={styles.moveBtn}
+                    onPress={() => handleMoveRush(rushIndex, 'up')}
+                  >
+                    <Feather name="chevron-left" size={14} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.rushTab,
+                    isActive && styles.rushTabActive,
+                    isActive && { borderBottomColor: rushColor },
+                    editMode && styles.rushTabEdit,
+                  ]}
+                  onPress={() => editMode ? null : setActiveRushId(rush.id)}
+                  onLongPress={() => handleDeleteRush(rush.id)}
                 >
-                  {rush.name}
-                </Text>
-                {rush.status === 'paused' && (
-                  <Feather name="pause-circle" size={12} color={colors.textMuted} />
+                  <View style={[styles.tabDot, { backgroundColor: rushColor }]} />
+                  <Text
+                    style={[styles.tabText, isActive && styles.tabTextActive]}
+                    numberOfLines={1}
+                  >
+                    {rush.name}
+                  </Text>
+                  {!editMode && rush.status === 'paused' && (
+                    <Feather name="pause-circle" size={12} color={colors.textMuted} />
+                  )}
+                  {!editMode && rush.status === 'completed' && (
+                    <Feather name="check-circle" size={12} color={colors.accent} />
+                  )}
+                  {editMode && (
+                    <TouchableOpacity
+                      style={styles.deleteTabBtn}
+                      onPress={() => handleDeleteRush(rush.id)}
+                    >
+                      <Feather name="x" size={14} color={colors.red || '#ef4444'} />
+                    </TouchableOpacity>
+                  )}
+                </TouchableOpacity>
+                {editMode && rushIndex < rushes.length - 1 && (
+                  <TouchableOpacity
+                    style={styles.moveBtn}
+                    onPress={() => handleMoveRush(rushIndex, 'down')}
+                  >
+                    <Feather name="chevron-right" size={14} color={colors.textMuted} />
+                  </TouchableOpacity>
                 )}
-                {rush.status === 'completed' && (
-                  <Feather name="check-circle" size={12} color={colors.accent} />
-                )}
-              </TouchableOpacity>
+              </View>
             );
           })}
         </ScrollView>
@@ -323,7 +435,7 @@ export function RushScreen() {
                 shadowRadius: 10,
               } : undefined}
             >
-              <NeuCard style={timerAlert ? [styles.timerCard, styles.timerCardAlert] : styles.timerCard}>
+              <NeuCard style={timerAlert ? { ...styles.timerCard, ...styles.timerCardAlert } : styles.timerCard}>
                 <View style={styles.timerHeader}>
                   <Text style={styles.rushName}>{activeRush.name}</Text>
                   <View style={styles.timerHeaderRight}>
@@ -393,7 +505,7 @@ export function RushScreen() {
               showsHorizontalScrollIndicator={false}
               style={styles.projectsScroll}
             >
-              {activeRush.projects.map((project) => {
+              {activeRush.projects.map((project, projectIndex) => {
                 const isActive = project.id === activeRush.activeProjectId;
                 const isBlinking = project.id === blinkingProjectId;
                 const completedTasks = project.tasks.filter(
@@ -402,48 +514,76 @@ export function RushScreen() {
                 const progress = (completedTasks / project.tasks.length) * 100;
 
                 const projectCard = (
-                  <TouchableOpacity
-                    key={project.id}
-                    style={[
-                      styles.projectCard,
-                      isActive && styles.projectCardActive,
-                      isBlinking && styles.projectCardBlinking,
-                    ]}
-                    onPress={() => {
-                      handleSelectProject(project.id);
-                      if (isBlinking) setBlinkingProjectId(null);
-                    }}
-                    onLongPress={() => {
-                      setEditingNotes({ projectId: project.id });
-                      setNotesText(project.notes || '');
-                    }}
-                  >
-                    <Text
-                      style={[styles.projectName, isActive && styles.projectNameActive]}
-                      numberOfLines={1}
-                    >
-                      {project.name}
-                    </Text>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          { width: `${progress}%` },
-                          isActive && { backgroundColor: activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.projectProgress}>
-                      {completedTasks}/{project.tasks.length}
-                    </Text>
-                    {project.notes && (
-                      <Feather name="file-text" size={12} color={colors.textDim} style={styles.notesIcon} />
+                  <View key={project.id} style={styles.projectCardWrapper}>
+                    {editMode && projectIndex > 0 && (
+                      <TouchableOpacity
+                        style={styles.projectMoveBtn}
+                        onPress={() => handleMoveProject(projectIndex, 'left')}
+                      >
+                        <Feather name="chevron-left" size={16} color={colors.textMuted} />
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.projectCard,
+                        isActive && styles.projectCardActive,
+                        isBlinking && styles.projectCardBlinking,
+                        editMode && styles.projectCardEdit,
+                      ]}
+                      onPress={() => {
+                        if (!editMode) {
+                          handleSelectProject(project.id);
+                          if (isBlinking) setBlinkingProjectId(null);
+                        }
+                      }}
+                      onLongPress={() => {
+                        setEditingNotes({ projectId: project.id });
+                        setNotesText(project.notes || '');
+                      }}
+                    >
+                      {editMode && (
+                        <TouchableOpacity
+                          style={styles.deleteProjectBtn}
+                          onPress={() => handleDeleteProject(project.id)}
+                        >
+                          <Feather name="x-circle" size={16} color={colors.red || '#ef4444'} />
+                        </TouchableOpacity>
+                      )}
+                      <Text
+                        style={[styles.projectName, isActive && styles.projectNameActive]}
+                        numberOfLines={1}
+                      >
+                        {project.name}
+                      </Text>
+                      <View style={styles.progressBar}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            { width: `${progress}%` },
+                            isActive && { backgroundColor: activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.projectProgress}>
+                        {completedTasks}/{project.tasks.length}
+                      </Text>
+                      {!editMode && project.notes && (
+                        <Feather name="file-text" size={12} color={colors.textDim} style={styles.notesIcon} />
+                      )}
+                    </TouchableOpacity>
+                    {editMode && projectIndex < activeRush.projects.length - 1 && (
+                      <TouchableOpacity
+                        style={styles.projectMoveBtn}
+                        onPress={() => handleMoveProject(projectIndex, 'right')}
+                      >
+                        <Feather name="chevron-right" size={16} color={colors.textMuted} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 );
 
                 // Wrap blinking project in Animated.View
-                if (isBlinking) {
+                if (isBlinking && !editMode) {
                   return (
                     <Animated.View key={project.id} style={{ opacity: blinkAnim }}>
                       {projectCard}
@@ -543,6 +683,24 @@ export function RushScreen() {
 
                 return (
                   <View key={step.id} style={styles.workflowStep}>
+                    {editMode && (
+                      <View style={styles.stepEditControls}>
+                        <TouchableOpacity
+                          style={[styles.stepMoveBtn, index === 0 && styles.stepMoveBtnDisabled]}
+                          onPress={() => handleMoveStep(index, 'up')}
+                          disabled={index === 0}
+                        >
+                          <Feather name="chevron-up" size={16} color={index === 0 ? colors.textDim : colors.textMuted} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.stepMoveBtn, index === activeRush.workflow.length - 1 && styles.stepMoveBtnDisabled]}
+                          onPress={() => handleMoveStep(index, 'down')}
+                          disabled={index === activeRush.workflow.length - 1}
+                        >
+                          <Feather name="chevron-down" size={16} color={index === activeRush.workflow.length - 1 ? colors.textDim : colors.textMuted} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
                     <View
                       style={[
                         styles.stepIndicator,
@@ -570,12 +728,20 @@ export function RushScreen() {
                       >
                         {step.title}
                       </Text>
-                      {task?.timeSpent ? (
+                      {!editMode && task?.timeSpent ? (
                         <Text style={styles.stepTime}>{formatTime(task.timeSpent)}</Text>
-                      ) : step.timeLimit ? (
+                      ) : !editMode && step.timeLimit ? (
                         <Text style={styles.stepTimeLimit}>{step.timeLimit}m</Text>
                       ) : null}
                     </View>
+                    {editMode && (
+                      <TouchableOpacity
+                        style={styles.deleteStepBtn}
+                        onPress={() => handleDeleteStep(index)}
+                      >
+                        <Feather name="trash-2" size={16} color={colors.red || '#ef4444'} />
+                      </TouchableOpacity>
+                    )}
                   </View>
                 );
               })}
@@ -691,6 +857,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  editModeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.cardBgLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editModeBtnActive: {
+    backgroundColor: colors.cardBgDark,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
   addRushBtn: {
     width: 40,
     height: 40,
@@ -718,6 +902,21 @@ const styles = StyleSheet.create({
   },
   rushTabActive: {
     borderBottomWidth: 2,
+  },
+  rushTabWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rushTabEdit: {
+    backgroundColor: colors.cardBgDark,
+    borderRadius: 8,
+  },
+  moveBtn: {
+    padding: 4,
+  },
+  deleteTabBtn: {
+    marginLeft: 6,
+    padding: 2,
   },
   tabDot: {
     width: 8,
@@ -883,6 +1082,24 @@ const styles = StyleSheet.create({
     borderColor: colors.orange,
     backgroundColor: colors.cardBg,
   },
+  projectCardWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  projectCardEdit: {
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: colors.textDim,
+  },
+  projectMoveBtn: {
+    padding: 4,
+  },
+  deleteProjectBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 1,
+  },
   projectName: {
     fontSize: 13,
     fontWeight: '500',
@@ -1019,6 +1236,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  stepEditControls: {
+    flexDirection: 'column',
+    marginRight: 4,
+  },
+  stepMoveBtn: {
+    padding: 2,
+  },
+  stepMoveBtnDisabled: {
+    opacity: 0.3,
+  },
+  deleteStepBtn: {
+    padding: 8,
   },
   stepIndicator: {
     width: 28,
