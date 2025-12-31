@@ -14,6 +14,7 @@ export interface Event {
   date: string; // Format YYYY-MM-DD
   time: string; // Format HH:MM
   createdAt: string;
+  completed?: boolean; // Événement effectué
 }
 
 export interface Todo {
