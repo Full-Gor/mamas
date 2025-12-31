@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, neuShadow, neuStyles } from '../theme/colors';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_SMALL_SCREEN = SCREEN_WIDTH < 380;
 
 interface HeaderProps {
   onSettingsPress?: () => void;
   onNotificationPress?: () => void;
   userName?: string;
+  notificationCount?: number;
 }
 
-export function Header({ onSettingsPress, onNotificationPress, userName = 'User' }: HeaderProps) {
+export function Header({
+  onSettingsPress,
+  onNotificationPress,
+  userName = 'User',
+  notificationCount = 3,
+}: HeaderProps) {
   const [btnPressed, setBtnPressed] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -29,26 +38,41 @@ export function Header({ onSettingsPress, onNotificationPress, userName = 'User'
     }
   };
 
+  // Nom d'utilisateur court pour mobile
+  const displayName = IS_SMALL_SCREEN ? userName.split('.')[0] : userName;
+
   return (
     <View style={styles.header}>
       {/* Logo */}
       <View style={styles.logo}>
         <View style={styles.logoIcon}>
           <Text style={styles.logoText}>NC</Text>
+          {/* Badge notification sur l'icône app */}
+          {notificationCount > 0 && (
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>
+                {notificationCount > 9 ? '9+' : notificationCount}
+              </Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.logoTitle}>NeuCalendar.co</Text>
+        {!IS_SMALL_SCREEN && (
+          <Text style={styles.logoTitle}>NeuCalendar</Text>
+        )}
       </View>
 
       {/* Right side */}
       <View style={styles.headerRight}>
-        <Text style={styles.welcomeText}>Welcome, {userName}</Text>
+        <Text style={styles.welcomeText} numberOfLines={1}>
+          Welcome, {displayName}
+        </Text>
 
         {/* Avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
         </View>
 
-        {/* Notification button */}
+        {/* Notification button avec badge */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
@@ -60,6 +84,13 @@ export function Header({ onSettingsPress, onNotificationPress, userName = 'User'
           activeOpacity={1}
         >
           <Feather name="bell" size={18} color={colors.textMuted} />
+          {notificationCount > 0 && (
+            <View style={styles.notifBadge}>
+              <Text style={styles.notifBadgeText}>
+                {notificationCount > 9 ? '9+' : notificationCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Mail button */}
@@ -98,10 +129,27 @@ export function Header({ onSettingsPress, onNotificationPress, userName = 'User'
       {showNotifications && (
         <View style={styles.notificationsDropdown}>
           <Text style={styles.notifTitle}>Notifications</Text>
-          <View style={styles.notifItem}>
-            <View style={styles.notifDot} />
-            <Text style={styles.notifText}>No new notifications</Text>
-          </View>
+          {notificationCount > 0 ? (
+            <>
+              <TouchableOpacity style={styles.notifItem}>
+                <View style={[styles.notifDot, { backgroundColor: colors.accent }]} />
+                <Text style={styles.notifText}>New event added for tomorrow</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.notifItem}>
+                <View style={[styles.notifDot, { backgroundColor: colors.blue }]} />
+                <Text style={styles.notifText}>Reminder: Meeting at 3PM</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.notifItem}>
+                <View style={[styles.notifDot, { backgroundColor: colors.orange }]} />
+                <Text style={styles.notifText}>Task completed: Review docs</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.notifItem}>
+              <View style={styles.notifDot} />
+              <Text style={styles.notifText}>No new notifications</Text>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -113,14 +161,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: IS_SMALL_SCREEN ? 12 : 20,
+    paddingVertical: 12,
     paddingTop: 50,
+    gap: 8,
   },
   logo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    flexShrink: 0,
   },
   logoIcon: {
     width: 32,
@@ -137,8 +187,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
+  logoBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  logoBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
+  },
   logoTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.text,
     letterSpacing: -0.5,
@@ -146,16 +215,17 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: IS_SMALL_SCREEN ? 6 : 8,
+    flexShrink: 1,
   },
   welcomeText: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textMuted,
-    marginRight: 4,
+    maxWidth: IS_SMALL_SCREEN ? 70 : 100,
   },
   iconBtn: {
-    width: 36,
-    height: 36,
+    width: IS_SMALL_SCREEN ? 32 : 36,
+    height: IS_SMALL_SCREEN ? 32 : 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,9 +239,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBgDark,
     ...neuStyles.buttonPressed,
   },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  notifBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#fff',
+  },
   avatar: {
-    width: 36,
-    height: 36,
+    width: IS_SMALL_SCREEN ? 32 : 36,
+    height: IS_SMALL_SCREEN ? 32 : 36,
     borderRadius: 18,
     backgroundColor: colors.accent,
     alignItems: 'center',
@@ -179,15 +268,16 @@ const styles = StyleSheet.create({
     ...neuShadow.raisedSm,
   },
   avatarText: {
-    fontSize: 14,
+    fontSize: IS_SMALL_SCREEN ? 12 : 14,
     fontWeight: '600',
     color: colors.background,
   },
   notificationsDropdown: {
     position: 'absolute',
     top: 95,
-    right: 70,
-    width: 220,
+    right: 12,
+    left: IS_SMALL_SCREEN ? 12 : undefined,
+    width: IS_SMALL_SCREEN ? undefined : 240,
     backgroundColor: colors.cardBgLight,
     borderRadius: 16,
     padding: 16,
@@ -217,5 +307,6 @@ const styles = StyleSheet.create({
   notifText: {
     fontSize: 12,
     color: colors.textMuted,
+    flex: 1,
   },
 });
