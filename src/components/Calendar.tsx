@@ -37,7 +37,19 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, Event[]>();
+    const now = new Date();
+
     events.forEach(event => {
+      // Ne pas inclure les événements complétés dans les dots
+      if (event.completed) return;
+
+      // Vérifier si l'événement est passé (date + heure dépassées)
+      const [hours, minutes] = event.time.split(':').map(Number);
+      const eventDate = new Date(event.date);
+      eventDate.setHours(hours, minutes, 0, 0);
+
+      if (eventDate < now) return; // Événement passé, ne pas afficher
+
       const existing = map.get(event.date) || [];
       existing.push(event);
       map.set(event.date, existing);

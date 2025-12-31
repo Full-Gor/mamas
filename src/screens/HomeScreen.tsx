@@ -75,6 +75,15 @@ export function HomeScreen() {
     await saveTodos(newTodos);
   };
 
+  // Toggle un événement (marqué comme effectué)
+  const handleToggleEvent = async (eventId: string) => {
+    const newEvents = events.map(e =>
+      e.id === eventId ? { ...e, completed: !e.completed } : e
+    );
+    setEvents(newEvents);
+    await saveEvents(newEvents);
+  };
+
   // Sélectionner/désélectionner une catégorie
   const handleSelectCategory = (categoryId: string) => {
     setSelectedCategory(prev => prev === categoryId ? null : categoryId);
@@ -99,6 +108,7 @@ export function HomeScreen() {
               <EventsCard
                 events={selectedDayEvents}
                 onAddEvent={() => setShowAddEvent(true)}
+                onToggleEvent={handleToggleEvent}
                 selectedDate={selectedDate}
               />
               <TodoCard
@@ -149,6 +159,7 @@ export function HomeScreen() {
             <EventsCard
               events={selectedDayEvents}
               onAddEvent={() => setShowAddEvent(true)}
+              onToggleEvent={handleToggleEvent}
               selectedDate={selectedDate}
             />
 
