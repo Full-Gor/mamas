@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import i18n from './src/i18n';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { RushScreen } from './src/screens/RushScreen';
+import { LanguageSelector } from './src/components';
 import { initNotifications, setBadgeCount } from './src/services/notifications';
 import { colors, neuShadow } from './src/theme/colors';
 
@@ -12,6 +13,7 @@ type TabName = 'home' | 'rush';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabName>('home');
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   useEffect(() => {
     // Initialize notifications and set badge count
@@ -52,6 +54,16 @@ export default function App() {
             </Text>
           </TouchableOpacity>
 
+          {/* Language Button */}
+          <TouchableOpacity
+            style={styles.langTab}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <View style={styles.langButton}>
+              <Feather name="globe" size={20} color={colors.text} />
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.tab, activeTab === 'rush' && styles.tabActive]}
             onPress={() => setActiveTab('rush')}
@@ -71,6 +83,12 @@ export default function App() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Language Selector Modal */}
+        <LanguageSelector
+          visible={showLanguageModal}
+          onClose={() => setShowLanguageModal(false)}
+        />
       </View>
     </I18nextProvider>
   );
@@ -111,5 +129,19 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: colors.accent,
     fontWeight: '600',
+  },
+  langTab: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  langButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.cardBgLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...neuShadow.raisedSm,
   },
 });

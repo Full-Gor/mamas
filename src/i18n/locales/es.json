@@ -73,6 +73,9 @@
     "save": "Guardar",
     "delete": "Eliminar"
   },
+  "settings": {
+    "language": "Idioma"
+  },
   "rush": {
     "createRush": "Crear Rush",
     "rushName": "Nombre del Rush",

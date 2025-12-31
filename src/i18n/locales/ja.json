@@ -73,6 +73,9 @@
     "save": "保存",
     "delete": "削除"
   },
+  "settings": {
+    "language": "言語"
+  },
   "rush": {
     "createRush": "Rushを作成",
     "rushName": "Rush名",
