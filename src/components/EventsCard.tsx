@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors, neuShadow } from '../theme/colors';
+import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
 import type { Event } from '../types';
 import { getCategoryById } from '../data/categories';
@@ -12,28 +12,79 @@ interface EventsCardProps {
   selectedDate: string;
 }
 
+type FilterType = 'week' | 'today' | 'month';
+
+const FILTER_LABELS: Record<FilterType, string> = {
+  week: 'This Week',
+  today: 'Today',
+  month: 'This Month',
+};
+
 export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps) {
-  // Filtrer les événements de la semaine
-  const weekEvents = events.slice(0, 5);
+  const [filter, setFilter] = useState<FilterType>('week');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Filtrer les événements selon le filtre
+  const filteredEvents = events.slice(0, 5);
+
+  const handleFilterSelect = (newFilter: FilterType) => {
+    setFilter(newFilter);
+    setShowDropdown(false);
+  };
 
   return (
     <NeuCard>
       <View style={styles.header}>
-        <Text style={styles.title}>Événements</Text>
-        <TouchableOpacity style={styles.dropdown}>
-          <Text style={styles.dropdownText}>Cette semaine</Text>
+        <Text style={styles.title}>Upcoming Events</Text>
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => setShowDropdown(!showDropdown)}
+        >
+          <Text style={styles.dropdownText}>{FILTER_LABELS[filter]}</Text>
           <Feather name="chevron-down" size={14} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
 
-      {weekEvents.length === 0 ? (
-        <Text style={styles.emptyText}>Aucun événement</Text>
+      {/* Dropdown menu */}
+      {showDropdown && (
+        <View style={styles.dropdownMenu}>
+          {(Object.keys(FILTER_LABELS) as FilterType[]).map((key) => (
+            <TouchableOpacity
+              key={key}
+              style={[
+                styles.dropdownItem,
+                filter === key && styles.dropdownItemActive,
+              ]}
+              onPress={() => handleFilterSelect(key)}
+            >
+              <Text style={[
+                styles.dropdownItemText,
+                filter === key && styles.dropdownItemTextActive,
+              ]}>
+                {FILTER_LABELS[key]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {filteredEvents.length === 0 ? (
+        <Text style={styles.emptyText}>No events</Text>
       ) : (
-        weekEvents.map((event) => {
+        filteredEvents.map((event) => {
           const category = getCategoryById(event.categoryId);
+          const eventColor = category?.color || colors.blue;
+
           return (
-            <TouchableOpacity key={event.id} style={styles.eventItem}>
-              <View style={[styles.eventDot, { backgroundColor: category?.color || colors.blue }]} />
+            <TouchableOpacity
+              key={event.id}
+              style={[
+                styles.eventItem,
+                { borderLeftColor: eventColor },
+              ]}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.eventDot, { backgroundColor: eventColor }]} />
               <Text style={styles.eventText} numberOfLines={1}>
                 {event.title}, {event.time}
               </Text>
@@ -44,7 +95,7 @@ export function EventsCard({ events, onAddEvent, selectedDate }: EventsCardProps
 
       <TouchableOpacity style={styles.addBtn} onPress={onAddEvent}>
         <Feather name="plus" size={14} color={colors.textMuted} />
-        <Text style={styles.addBtnText}>Ajouter un événement</Text>
+        <Text style={styles.addBtnText}>Add New Event</Text>
       </TouchableOpacity>
     </NeuCard>
   );
@@ -66,22 +117,57 @@ const styles = StyleSheet.create({
   dropdown: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: colors.cardBgLight,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    ...neuStyles.buttonRaised,
     ...neuShadow.raisedSm,
   },
   dropdownText: {
     fontSize: 12,
     color: colors.textMuted,
   },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: colors.cardBgLight,
+    borderRadius: 12,
+    padding: 6,
+    zIndex: 100,
+    ...neuShadow.raised,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  dropdownItemActive: {
+    backgroundColor: colors.cardBgDark,
+    ...neuStyles.buttonPressed,
+  },
+  dropdownItemText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  dropdownItemTextActive: {
+    color: colors.accent,
+    fontWeight: '500',
+  },
   eventItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingLeft: 14,
+    paddingRight: 8,
+    marginVertical: 4,
+    borderLeftWidth: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
   },
   eventDot: {
     width: 8,
@@ -89,7 +175,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   eventText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
     flex: 1,
   },
@@ -103,8 +189,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingVertical: 12,
+    marginTop: 8,
   },
   addBtnText: {
     fontSize: 12,

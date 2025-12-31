@@ -13,6 +13,8 @@ import {
   AddEventModal,
   AddTodoModal,
   VoiceInput,
+  CategoryLegend,
+  SocialBar,
 } from '../components';
 import type { Event, Todo } from '../types';
 
@@ -25,6 +27,7 @@ export function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAddTodo, setShowAddTodo] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Charger les données au démarrage
   useEffect(() => {
@@ -41,8 +44,13 @@ export function HomeScreen() {
 
   // Événements du jour sélectionné
   const selectedDayEvents = useMemo(() => {
-    return events.filter(e => e.date === selectedDate);
-  }, [events, selectedDate]);
+    let filtered = events.filter(e => e.date === selectedDate);
+    // Filtrer par catégorie si une est sélectionnée
+    if (selectedCategory) {
+      filtered = filtered.filter(e => e.categoryId === selectedCategory);
+    }
+    return filtered;
+  }, [events, selectedDate, selectedCategory]);
 
   // Ajouter un événement
   const handleAddEvent = async (event: Event) => {
@@ -67,11 +75,16 @@ export function HomeScreen() {
     await saveTodos(newTodos);
   };
 
+  // Sélectionner/désélectionner une catégorie
+  const handleSelectCategory = (categoryId: string) => {
+    setSelectedCategory(prev => prev === categoryId ? null : categoryId);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      <Header />
+      <Header userName="Arkace.dev" />
 
       <ScrollView
         style={styles.scrollView}
@@ -106,6 +119,13 @@ export function HomeScreen() {
                 onAddEvent={handleAddEvent}
                 eventsCount={selectedDayEvents.length}
               />
+              {/* Légende des catégories */}
+              <CategoryLegend
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectCategory}
+              />
+              {/* Boutons sociaux */}
+              <SocialBar />
             </View>
           </View>
         ) : (
@@ -137,6 +157,15 @@ export function HomeScreen() {
               onToggleTodo={handleToggleTodo}
               onAddTodo={() => setShowAddTodo(true)}
             />
+
+            {/* Légende des catégories */}
+            <CategoryLegend
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleSelectCategory}
+            />
+
+            {/* Boutons sociaux */}
+            <SocialBar />
           </View>
         )}
       </ScrollView>

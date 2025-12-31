@@ -8,3 +8,5 @@ export { NeuButton } from './NeuButton';
 export { AddEventModal } from './AddEventModal';
 export { AddTodoModal } from './AddTodoModal';
 export { VoiceInput } from './VoiceInput';
+export { CategoryLegend } from './CategoryLegend';
+export { SocialBar } from './SocialBar';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, neuShadow } from '../theme/colors';
+import { colors, neuShadow, neuStyles } from '../theme/colors';
 
 interface NeuCardProps {
   children: React.ReactNode;
@@ -19,13 +19,14 @@ export function NeuCard({ children, style, pressed = false }: NeuCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.cardBg,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...neuStyles.card,
     ...neuShadow.raised,
   },
   cardPressed: {
+    backgroundColor: colors.cardBgDark,
+    ...neuStyles.buttonPressed,
     ...neuShadow.pressed,
   },
 });

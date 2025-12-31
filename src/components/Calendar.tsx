@@ -1,14 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors, neuShadow } from '../theme/colors';
+import { colors, neuShadow, neuStyles } from '../theme/colors';
 import { NeuCard } from './NeuCard';
-import { getCalendarDays, getMonthName, getDayName, formatDate, isToday } from '../utils/dateUtils';
+import { getCalendarDays, getMonthName, formatDate, isToday } from '../utils/dateUtils';
 import type { Event } from '../types';
 import { getCategoryById } from '../data/categories';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const DAY_SIZE = (SCREEN_WIDTH - 80) / 7;
 
 interface CalendarProps {
   events: Event[];
@@ -17,9 +14,14 @@ interface CalendarProps {
 }
 
 const WEEK_DAYS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
 
 export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [navPressed, setNavPressed] = useState<'prev' | 'next' | null>(null);
 
   const days = useMemo(() => {
     return getCalendarDays(currentDate.getFullYear(), currentDate.getMonth());
@@ -43,31 +45,122 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
+  const selectMonth = (monthIndex: number) => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), monthIndex, 1));
+    setShowMonthPicker(false);
+  };
+
+  const selectYear = (year: number) => {
+    setCurrentDate(prev => new Date(year, prev.getMonth(), 1));
+    setShowYearPicker(false);
+  };
+
   return (
     <NeuCard style={styles.container}>
-      {/* Header */}
+      {/* Header avec navigation */}
       <View style={styles.header}>
         <View style={styles.navButtons}>
-          <TouchableOpacity style={styles.navBtn} onPress={goToPrevMonth}>
-            <Feather name="chevron-left" size={16} color={colors.textMuted} />
+          {/* Bouton Précédent */}
+          <TouchableOpacity
+            style={[
+              styles.navBtn,
+              navPressed === 'prev' ? styles.navBtnPressed : styles.navBtnRaised,
+            ]}
+            onPressIn={() => setNavPressed('prev')}
+            onPressOut={() => setNavPressed(null)}
+            onPress={goToPrevMonth}
+            activeOpacity={1}
+          >
+            <Feather name="chevron-left" size={18} color={colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navBtn} onPress={goToNextMonth}>
-            <Feather name="chevron-right" size={16} color={colors.textMuted} />
+
+          {/* Bouton Suivant */}
+          <TouchableOpacity
+            style={[
+              styles.navBtn,
+              navPressed === 'next' ? styles.navBtnPressed : styles.navBtnRaised,
+            ]}
+            onPressIn={() => setNavPressed('next')}
+            onPressOut={() => setNavPressed(null)}
+            onPress={goToNextMonth}
+            activeOpacity={1}
+          >
+            <Feather name="chevron-right" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.monthSelector}>
+        {/* Sélecteur de mois */}
+        <TouchableOpacity
+          style={styles.monthSelector}
+          onPress={() => {
+            setShowMonthPicker(!showMonthPicker);
+            setShowYearPicker(false);
+          }}
+        >
           <Text style={styles.selectorText}>{getMonthName(currentDate.getMonth())}</Text>
           <Feather name="chevron-down" size={14} color={colors.text} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.yearSelector}>
+        {/* Sélecteur d'année */}
+        <TouchableOpacity
+          style={styles.yearSelector}
+          onPress={() => {
+            setShowYearPicker(!showYearPicker);
+            setShowMonthPicker(false);
+          }}
+        >
           <Text style={styles.selectorText}>{currentDate.getFullYear()}</Text>
           <Feather name="chevron-down" size={14} color={colors.text} />
         </TouchableOpacity>
       </View>
 
-      {/* Week days header */}
+      {/* Dropdown Mois */}
+      {showMonthPicker && (
+        <View style={styles.pickerDropdown}>
+          {MONTHS.map((month, idx) => (
+            <TouchableOpacity
+              key={month}
+              style={[
+                styles.pickerItem,
+                currentDate.getMonth() === idx && styles.pickerItemActive,
+              ]}
+              onPress={() => selectMonth(idx)}
+            >
+              <Text style={[
+                styles.pickerItemText,
+                currentDate.getMonth() === idx && styles.pickerItemTextActive,
+              ]}>
+                {month}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Dropdown Année */}
+      {showYearPicker && (
+        <View style={styles.pickerDropdown}>
+          {YEARS.map((year) => (
+            <TouchableOpacity
+              key={year}
+              style={[
+                styles.pickerItem,
+                currentDate.getFullYear() === year && styles.pickerItemActive,
+              ]}
+              onPress={() => selectYear(year)}
+            >
+              <Text style={[
+                styles.pickerItemText,
+                currentDate.getFullYear() === year && styles.pickerItemTextActive,
+              ]}>
+                {year}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* En-tête des jours de la semaine */}
       <View style={styles.weekDaysRow}>
         {WEEK_DAYS.map((day, idx) => (
           <View key={idx} style={styles.weekDayCell}>
@@ -76,7 +169,7 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
         ))}
       </View>
 
-      {/* Days grid */}
+      {/* Grille des jours */}
       <View style={styles.daysGrid}>
         {days.map((dayData, idx) => {
           const dateStr = formatDate(dayData.date);
@@ -90,33 +183,39 @@ export function Calendar({ events, selectedDate, onSelectDate }: CalendarProps) 
               style={[
                 styles.dayCell,
                 !dayData.isCurrentMonth && styles.dayCellMuted,
-                isSelected && styles.dayCellSelected,
               ]}
               onPress={() => onSelectDate(dateStr)}
+              activeOpacity={0.7}
             >
-              <Text style={[
-                styles.dayText,
-                !dayData.isCurrentMonth && styles.dayTextMuted,
-                isTodayDate && styles.dayTextToday,
-                isSelected && styles.dayTextSelected,
+              {/* Cercle de sélection avec effet enfoncé */}
+              <View style={[
+                styles.dayInner,
+                isSelected && styles.dayInnerSelected,
               ]}>
-                {dayData.day}
-              </Text>
+                <Text style={[
+                  styles.dayText,
+                  !dayData.isCurrentMonth && styles.dayTextMuted,
+                  isTodayDate && !isSelected && styles.dayTextToday,
+                  isSelected && styles.dayTextSelected,
+                ]}>
+                  {dayData.day}
+                </Text>
 
-              {/* Event dots */}
-              {dayEvents.length > 0 && (
-                <View style={styles.dotsContainer}>
-                  {dayEvents.slice(0, 3).map((event, i) => {
-                    const category = getCategoryById(event.categoryId);
-                    return (
-                      <View
-                        key={i}
-                        style={[styles.dot, { backgroundColor: category?.color || colors.blue }]}
-                      />
-                    );
-                  })}
-                </View>
-              )}
+                {/* Points d'événements */}
+                {dayEvents.length > 0 && (
+                  <View style={styles.dotsContainer}>
+                    {dayEvents.slice(0, 3).map((event, i) => {
+                      const category = getCategoryById(event.categoryId);
+                      return (
+                        <View
+                          key={i}
+                          style={[styles.dot, { backgroundColor: category?.color || colors.yellow }]}
+                        />
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -137,45 +236,86 @@ const styles = StyleSheet.create({
   },
   navButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.cardBgLight,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  navBtnRaised: {
+    backgroundColor: colors.cardBgLight,
+    ...neuStyles.buttonRaised,
     ...neuShadow.raisedSm,
+  },
+  navBtnPressed: {
+    backgroundColor: colors.cardBgDark,
+    ...neuStyles.buttonPressed,
   },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.cardBgLight,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    ...neuStyles.selectorRaised,
     ...neuShadow.raisedSm,
   },
   yearSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.cardBgLight,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    ...neuStyles.selectorRaised,
     ...neuShadow.raisedSm,
   },
   selectorText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text,
   },
+  pickerDropdown: {
+    position: 'absolute',
+    top: 70,
+    left: 100,
+    right: 20,
+    backgroundColor: colors.cardBgLight,
+    borderRadius: 16,
+    padding: 8,
+    zIndex: 100,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    ...neuShadow.raised,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  pickerItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    minWidth: '30%',
+  },
+  pickerItemActive: {
+    backgroundColor: colors.cardBgDark,
+    ...neuStyles.buttonPressed,
+  },
+  pickerItemText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  pickerItemTextActive: {
+    color: colors.accent,
+    fontWeight: '600',
+  },
   weekDaysRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   weekDayCell: {
     flex: 1,
@@ -197,15 +337,21 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
-    marginVertical: 2,
+    padding: 2,
   },
   dayCellMuted: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
-  dayCellSelected: {
-    backgroundColor: colors.cardBgLight,
-    ...neuShadow.pressed,
+  dayInner: {
+    width: '85%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  dayInnerSelected: {
+    backgroundColor: colors.cardBgDark,
+    ...neuStyles.dateSelected,
   },
   dayText: {
     fontSize: 14,
@@ -221,17 +367,18 @@ const styles = StyleSheet.create({
   },
   dayTextSelected: {
     color: colors.text,
+    fontWeight: '600',
   },
   dotsContainer: {
     flexDirection: 'row',
-    gap: 2,
-    marginTop: 4,
+    gap: 3,
+    marginTop: 3,
     position: 'absolute',
-    bottom: 6,
+    bottom: 4,
   },
   dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
 });
