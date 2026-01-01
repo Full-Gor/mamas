@@ -115,20 +115,21 @@ export function RushScreen() {
   const activeRush = rushes.find(r => r.id === activeRushId);
   const activeProject = activeRush?.projects.find(p => p.id === activeRush.activeProjectId);
 
-  // Check switch timer limits
+  // Check switch timer limits (per step)
   useEffect(() => {
     if (!activeRush || !activeProject || activeRush.status === 'paused') return;
     if (!activeRush.switchTimerLimit || !activeProject.currentSessionStart) return;
 
     const timeLimitSeconds = activeRush.switchTimerLimit * 60;
+    const currentStepIndex = activeProject.currentStepIndex;
+    const currentTaskTimeSpent = activeProject.tasks[currentStepIndex]?.timeSpent || 0;
 
     const checkTimer = () => {
       const elapsed = Math.floor(
         (Date.now() - new Date(activeProject.currentSessionStart!).getTime()) / 1000
       );
-      const totalElapsed = activeProject.totalTimeSpent || 0;
-
-      if (elapsed + totalElapsed >= timeLimitSeconds && !timerAlert) {
+      // Only count time for current step, not total project time
+      if (elapsed + currentTaskTimeSpent >= timeLimitSeconds && !timerAlert) {
         setTimerAlert(true);
       }
     };
@@ -170,6 +171,9 @@ export function RushScreen() {
     const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
     await updateRushes(newRushes);
 
+    // Reset timer alert for new step
+    setTimerAlert(false);
+
     // Find next incomplete Rush and trigger blinking
     const currentRushIndex = rushes.findIndex(r => r.id === activeRush.id);
     const nextRush = rushes.find((r, idx) => {
@@ -194,6 +198,8 @@ export function RushScreen() {
     const updated = skipTask(activeRush, activeProject.id);
     const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
     await updateRushes(newRushes);
+    // Reset timer alert for new step
+    setTimerAlert(false);
   };
 
   const handleTogglePause = async () => {

@@ -129,8 +129,8 @@
     "resetWorkflow": "Réinitialiser le workflow",
     "resetWorkflowConfirm": "Êtes-vous sûr de vouloir réinitialiser le workflow ? Toute la progression sera perdue.",
     "reset": "Réinitialiser",
-    "switchTimerLabel": "Timer de switch",
-    "switchTimerHint": "Alerte quand il faut passer au rush suivant (0 = désactivé)",
+    "switchTimerLabel": "Timer par étape",
+    "switchTimerHint": "Alerte après X min par étape (0 = désactivé)",
     "minutes": "min",
     "switchTimerAlert": "C'est l'heure de switcher !"
   }

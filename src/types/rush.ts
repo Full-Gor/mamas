@@ -107,8 +107,8 @@ export const DEFAULT_WORKFLOWS: SavedWorkflow[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'etude-30-min',
-    name: 'Étude 30 min',
+    id: 'peinture',
+    name: 'Peinture',
     steps: [
       { title: 'Choisir Sujet + 3 Couleurs', order: 0 },
       { title: 'Peindre Arrière-Plan Rapide', order: 1 },
