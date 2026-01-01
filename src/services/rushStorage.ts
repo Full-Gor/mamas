@@ -663,3 +663,34 @@ export function moveWorkflowStep(rush: Rush, fromIndex: number, toIndex: number)
     updatedAt: new Date().toISOString(),
   };
 }
+
+// ==================== WORKFLOW RESET ====================
+
+export function resetWorkflow(rush: Rush): Rush {
+  const now = new Date().toISOString();
+
+  // Reset all tasks in all projects
+  const updatedProjects = rush.projects.map(p => ({
+    ...p,
+    currentStepIndex: 0,
+    tasks: rush.workflow.map(step => ({
+      stepId: step.id,
+      status: 'pending' as RushTaskStatus,
+      timeSpent: 0,
+    })),
+    totalTimeSpent: 0,
+    sessions: [],
+    currentSessionStart: undefined,
+    waitingSince: undefined,
+    isBlinking: false,
+  }));
+
+  return {
+    ...rush,
+    projects: updatedProjects,
+    status: 'active',
+    totalTimeSpent: 0,
+    completedAt: undefined,
+    updatedAt: now,
+  };
+}

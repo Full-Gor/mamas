@@ -125,6 +125,9 @@
     "switchToNext": "Switch to next",
     "goToNext": "Go",
     "timeLimitExceeded": "Time limit exceeded!",
-    "continueAnyway": "Continue"
+    "continueAnyway": "Continue",
+    "resetWorkflow": "Reset Workflow",
+    "resetWorkflowConfirm": "Are you sure you want to reset the workflow? All progress will be lost.",
+    "reset": "Reset"
   }
 }

@@ -27,7 +27,6 @@ interface CreateRushModalProps {
 export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const [projectNames, setProjectNames] = useState('');
   const [selectedColor, setSelectedColor] = useState<RushColor>('green');
   const [workflows, setWorkflows] = useState<SavedWorkflow[]>(DEFAULT_WORKFLOWS);
   const [selectedWorkflow, setSelectedWorkflow] = useState<SavedWorkflow | null>(null);
@@ -50,15 +49,6 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
   const handleSubmit = () => {
     if (!name.trim()) return;
 
-    const projects = projectNames
-      .split('\n')
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
-
-    if (projects.length === 0) {
-      projects.push('Project 1');
-    }
-
     let workflowSteps;
     if (useCustomWorkflow) {
       const validSteps = customSteps.filter(s => s.trim().length > 0);
@@ -70,12 +60,11 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
       return;
     }
 
-    const newRush = createRush(name.trim(), workflowSteps, projects, selectedColor);
+    const newRush = createRush(name.trim(), workflowSteps, [name.trim()], selectedColor);
     onCreateRush(newRush);
 
     // Reset form
     setName('');
-    setProjectNames('');
     setSelectedColor('green');
     setCustomSteps(['']);
     setUseCustomWorkflow(false);
@@ -234,21 +223,6 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
                 )}
               </View>
             )}
-
-            {/* Project Names */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('rush.projectNames')}</Text>
-              <TextInput
-                style={[styles.input, styles.multilineInput]}
-                value={projectNames}
-                onChangeText={setProjectNames}
-                placeholder={t('rush.projectNamesPlaceholder')}
-                placeholderTextColor={colors.textDim}
-                multiline
-                numberOfLines={4}
-              />
-              <Text style={styles.hint}>{t('rush.projectNamesHint')}</Text>
-            </View>
           </ScrollView>
 
           {/* Submit Button */}

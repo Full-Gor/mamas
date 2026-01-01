@@ -125,6 +125,9 @@
     "switchToNext": "Passer au suivant",
     "goToNext": "Aller",
     "timeLimitExceeded": "Temps limite dépassé !",
-    "continueAnyway": "Continuer"
+    "continueAnyway": "Continuer",
+    "resetWorkflow": "Réinitialiser le workflow",
+    "resetWorkflowConfirm": "Êtes-vous sûr de vouloir réinitialiser le workflow ? Toute la progression sera perdue.",
+    "reset": "Réinitialiser"
   }
 }
