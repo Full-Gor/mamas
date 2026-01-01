@@ -121,6 +121,10 @@
     "cannotDeleteLastProject": "Impossible de supprimer le dernier projet",
     "deleteStep": "Supprimer l'étape",
     "deleteStepConfirm": "Voulez-vous vraiment supprimer cette étape du workflow ?",
-    "cannotDeleteLastStep": "Impossible de supprimer la dernière étape"
+    "cannotDeleteLastStep": "Impossible de supprimer la dernière étape",
+    "switchToNext": "Passer au suivant",
+    "goToNext": "Aller",
+    "timeLimitExceeded": "Temps limite dépassé !",
+    "continueAnyway": "Continuer"
   }
 }
