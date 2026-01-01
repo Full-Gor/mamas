@@ -115,21 +115,18 @@ export function RushScreen() {
   const activeRush = rushes.find(r => r.id === activeRushId);
   const activeProject = activeRush?.projects.find(p => p.id === activeRush.activeProjectId);
 
-  // Check timer limits
+  // Check switch timer limits
   useEffect(() => {
     if (!activeRush || !activeProject || activeRush.status === 'paused') return;
+    if (!activeRush.switchTimerLimit || !activeProject.currentSessionStart) return;
 
-    const currentStep = activeRush.workflow[activeProject.currentStepIndex];
-    if (!currentStep?.timeLimit || !activeProject.currentSessionStart) return;
-
-    const timeLimitValue = currentStep.timeLimit;
+    const timeLimitSeconds = activeRush.switchTimerLimit * 60;
 
     const checkTimer = () => {
       const elapsed = Math.floor(
         (Date.now() - new Date(activeProject.currentSessionStart!).getTime()) / 1000
       );
-      const totalElapsed = activeProject.tasks[activeProject.currentStepIndex]?.timeSpent || 0;
-      const timeLimitSeconds = timeLimitValue * 60;
+      const totalElapsed = activeProject.totalTimeSpent || 0;
 
       if (elapsed + totalElapsed >= timeLimitSeconds && !timerAlert) {
         setTimerAlert(true);
@@ -437,7 +434,7 @@ export function RushScreen() {
         <View style={styles.timerAlertBar}>
           <View style={styles.timerAlertContent}>
             <Feather name="alert-triangle" size={20} color={colors.orange} />
-            <Text style={styles.timerAlertText}>{t('rush.timeLimitExceeded')}</Text>
+            <Text style={styles.timerAlertText}>{t('rush.switchTimerAlert')}</Text>
           </View>
           <View style={styles.timerAlertButtons}>
             <TouchableOpacity

@@ -61,6 +61,7 @@ export interface Rush {
   startedAt?: string;
   completedAt?: string;
   totalTimeSpent: number;
+  switchTimerLimit?: number; // Limite de temps en minutes avant alerte de switch
   isBlinking?: boolean;
   blinkingStopped?: boolean;
   createdAt: string;
@@ -91,13 +92,43 @@ export interface SavedWorkflow {
 // Workflows par défaut
 export const DEFAULT_WORKFLOWS: SavedWorkflow[] = [
   {
+    id: 'peinture-rapide',
+    name: 'Peinture Rapide',
+    steps: [
+      { title: 'Choisir Couleur Principale', order: 0 },
+      { title: 'Peindre Arrière-Plan Uni', order: 1 },
+      { title: 'Dessiner Forme Avant-Plan', order: 2 },
+      { title: 'Peindre Avant-Plan Simple', order: 3 },
+      { title: 'Un Point Lumineux', order: 4 },
+      { title: 'Regarder et Sourire', order: 5 },
+    ],
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'etude-30-min',
+    name: 'Étude 30 min',
+    steps: [
+      { title: 'Choisir Sujet + 3 Couleurs', order: 0 },
+      { title: 'Peindre Arrière-Plan Rapide', order: 1 },
+      { title: 'Bloquer Formes Principales', order: 2 },
+      { title: 'Ajouter Ombres Simples', order: 3 },
+      { title: '2 Accents Forts', order: 4 },
+      { title: 'Note Progrès', order: 5 },
+    ],
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
     id: 'feature-simple',
     name: 'Feature Simple',
     steps: [
-      { title: 'Analyse', order: 0, timeLimit: 10 },
+      { title: 'Analyse', order: 0 },
       { title: 'Implémentation', order: 1 },
-      { title: 'Test', order: 2, timeLimit: 15 },
-      { title: 'Review', order: 3, timeLimit: 10 },
+      { title: 'Test', order: 2 },
+      { title: 'Review', order: 3 },
     ],
     isDefault: true,
     createdAt: new Date().toISOString(),
@@ -107,12 +138,12 @@ export const DEFAULT_WORKFLOWS: SavedWorkflow[] = [
     id: 'app-mobile',
     name: 'App Mobile',
     steps: [
-      { title: 'Design UI', order: 0, timeLimit: 20 },
+      { title: 'Design UI', order: 0 },
       { title: 'Composants', order: 1 },
       { title: 'Logique', order: 2 },
       { title: 'Intégration API', order: 3 },
-      { title: 'Tests', order: 4, timeLimit: 15 },
-      { title: 'Build & Deploy', order: 5, timeLimit: 10 },
+      { title: 'Tests', order: 4 },
+      { title: 'Build & Deploy', order: 5 },
     ],
     isDefault: true,
     createdAt: new Date().toISOString(),
@@ -122,10 +153,10 @@ export const DEFAULT_WORKFLOWS: SavedWorkflow[] = [
     id: 'bug-fix',
     name: 'Bug Fix',
     steps: [
-      { title: 'Reproduction', order: 0, timeLimit: 10 },
-      { title: 'Diagnostic', order: 1, timeLimit: 15 },
+      { title: 'Reproduction', order: 0 },
+      { title: 'Diagnostic', order: 1 },
       { title: 'Fix', order: 2 },
-      { title: 'Test', order: 3, timeLimit: 10 },
+      { title: 'Test', order: 3 },
     ],
     isDefault: true,
     createdAt: new Date().toISOString(),

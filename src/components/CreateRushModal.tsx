@@ -32,6 +32,7 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
   const [selectedWorkflow, setSelectedWorkflow] = useState<SavedWorkflow | null>(null);
   const [customSteps, setCustomSteps] = useState<string[]>(['']);
   const [useCustomWorkflow, setUseCustomWorkflow] = useState(false);
+  const [switchTimer, setSwitchTimer] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -60,7 +61,8 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
       return;
     }
 
-    const newRush = createRush(name.trim(), workflowSteps, [name.trim()], selectedColor);
+    const timerLimit = switchTimer ? parseInt(switchTimer, 10) : undefined;
+    const newRush = createRush(name.trim(), workflowSteps, [name.trim()], selectedColor, timerLimit);
     onCreateRush(newRush);
 
     // Reset form
@@ -68,6 +70,7 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
     setSelectedColor('green');
     setCustomSteps(['']);
     setUseCustomWorkflow(false);
+    setSwitchTimer('');
     onClose();
   };
 
@@ -137,6 +140,24 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
                   </TouchableOpacity>
                 ))}
               </View>
+            </View>
+
+            {/* Switch Timer */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('rush.switchTimerLabel')}</Text>
+              <View style={styles.timerInputRow}>
+                <TextInput
+                  style={[styles.input, styles.timerInput]}
+                  value={switchTimer}
+                  onChangeText={(text) => setSwitchTimer(text.replace(/[^0-9]/g, ''))}
+                  placeholder="0"
+                  placeholderTextColor={colors.textDim}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                />
+                <Text style={styles.timerUnit}>{t('rush.minutes')}</Text>
+              </View>
+              <Text style={styles.hint}>{t('rush.switchTimerHint')}</Text>
             </View>
 
             {/* Workflow Selection Toggle */}
@@ -294,6 +315,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textDim,
     marginTop: 6,
+  },
+  timerInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  timerInput: {
+    width: 80,
+    textAlign: 'center',
+  },
+  timerUnit: {
+    fontSize: 14,
+    color: colors.textMuted,
   },
   colorGrid: {
     flexDirection: 'row',

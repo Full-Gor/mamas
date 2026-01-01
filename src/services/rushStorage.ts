@@ -67,7 +67,8 @@ export function createRush(
   name: string,
   workflow: RushWorkflowStep[],
   projectNames: string[],
-  color?: RushColor
+  color?: RushColor,
+  switchTimerLimit?: number
 ): Rush {
   const now = new Date().toISOString();
 
@@ -89,6 +90,7 @@ export function createRush(
     id: generateId(),
     name,
     color,
+    switchTimerLimit,
     workflow,
     projects,
     status: 'active',
