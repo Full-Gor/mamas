@@ -322,12 +322,8 @@ export function RushScreen() {
 
       {/* Rush Tabs */}
       {rushes.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-          contentContainerStyle={styles.tabsContent}
-        >
+        <View style={styles.tabsContainer}>
+          <View style={styles.tabsContent}>
           {rushes.map((rush, rushIndex) => {
             const isActive = rush.id === activeRushId;
             const isBlinking = rush.id === blinkingRushId;
@@ -403,7 +399,8 @@ export function RushScreen() {
             }
             return <View key={rush.id}>{tabContent}</View>;
           })}
-        </ScrollView>
+          </View>
+        </View>
       )}
 
       {/* Blinking Alert - Next Rush Notification */}
@@ -831,10 +828,12 @@ const styles = StyleSheet.create({
     ...neuShadow.raisedSm,
   },
   tabsContainer: {
-    maxHeight: 50,
+    paddingHorizontal: 20,
+    marginBottom: 8,
   },
   tabsContent: {
-    paddingHorizontal: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   blinkingAlert: {
