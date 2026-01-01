@@ -31,12 +31,10 @@ import {
   formatTime,
   formatTimeVerbose,
   deleteRush,
-  addProjectToRush,
-  removeProjectFromRush,
   removeStepFromWorkflow,
   reorderRushes,
-  reorderProjects,
   moveWorkflowStep,
+  resetWorkflow,
 } from '../services/rushStorage';
 import type { Rush, RushProject, RushStats } from '../types/rush';
 import { RUSH_COLORS } from '../types/rush';
@@ -51,18 +49,16 @@ export function RushScreen() {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [editingNotes, setEditingNotes] = useState<{ projectId: string; taskIndex?: number } | null>(null);
   const [notesText, setNotesText] = useState('');
-  const [showAddProject, setShowAddProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
-  const [blinkingProjectId, setBlinkingProjectId] = useState<string | null>(null);
+  const [blinkingRushId, setBlinkingRushId] = useState<string | null>(null);
   const [timerAlert, setTimerAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
   // Blinking animation
   const blinkAnim = useRef(new Animated.Value(1)).current;
 
-  // Blinking effect for next project
+  // Blinking effect for next rush
   useEffect(() => {
-    if (blinkingProjectId) {
+    if (blinkingRushId) {
       const blink = Animated.loop(
         Animated.sequence([
           Animated.timing(blinkAnim, {
@@ -83,7 +79,7 @@ export function RushScreen() {
     } else {
       blinkAnim.setValue(1);
     }
-  }, [blinkingProjectId]);
+  }, [blinkingRushId]);
 
   // Timer alert blinking
   useEffect(() => {
@@ -119,21 +115,18 @@ export function RushScreen() {
   const activeRush = rushes.find(r => r.id === activeRushId);
   const activeProject = activeRush?.projects.find(p => p.id === activeRush.activeProjectId);
 
-  // Check timer limits
+  // Check switch timer limits
   useEffect(() => {
     if (!activeRush || !activeProject || activeRush.status === 'paused') return;
+    if (!activeRush.switchTimerLimit || !activeProject.currentSessionStart) return;
 
-    const currentStep = activeRush.workflow[activeProject.currentStepIndex];
-    if (!currentStep?.timeLimit || !activeProject.currentSessionStart) return;
-
-    const timeLimitValue = currentStep.timeLimit;
+    const timeLimitSeconds = activeRush.switchTimerLimit * 60;
 
     const checkTimer = () => {
       const elapsed = Math.floor(
         (Date.now() - new Date(activeProject.currentSessionStart!).getTime()) / 1000
       );
-      const totalElapsed = activeProject.tasks[activeProject.currentStepIndex]?.timeSpent || 0;
-      const timeLimitSeconds = timeLimitValue * 60;
+      const totalElapsed = activeProject.totalTimeSpent || 0;
 
       if (elapsed + totalElapsed >= timeLimitSeconds && !timerAlert) {
         setTimerAlert(true);
@@ -177,18 +170,22 @@ export function RushScreen() {
     const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
     await updateRushes(newRushes);
 
-    // Find next incomplete project and trigger blinking
-    const currentProjectIndex = updated.projects.findIndex(p => p.id === activeProject.id);
-    const nextProject = updated.projects.find((p, idx) =>
-      idx > currentProjectIndex && p.currentStepIndex < updated.workflow.length
-    ) || updated.projects.find((p, idx) =>
-      idx < currentProjectIndex && p.currentStepIndex < updated.workflow.length
-    );
+    // Find next incomplete Rush and trigger blinking
+    const currentRushIndex = rushes.findIndex(r => r.id === activeRush.id);
+    const nextRush = rushes.find((r, idx) => {
+      if (idx <= currentRushIndex) return false;
+      const project = r.projects[0];
+      return project && project.currentStepIndex < r.workflow.length;
+    }) || rushes.find((r, idx) => {
+      if (idx >= currentRushIndex) return false;
+      const project = r.projects[0];
+      return project && project.currentStepIndex < r.workflow.length;
+    });
 
-    if (nextProject && nextProject.id !== activeProject.id) {
-      setBlinkingProjectId(nextProject.id);
-      // Auto-stop blinking after 5 seconds
-      setTimeout(() => setBlinkingProjectId(null), 5000);
+    if (nextRush && nextRush.id !== activeRush.id) {
+      setBlinkingRushId(nextRush.id);
+      // Auto-stop blinking after 10 seconds
+      setTimeout(() => setBlinkingRushId(null), 10000);
     }
   };
 
@@ -229,53 +226,12 @@ export function RushScreen() {
     setNotesText('');
   };
 
-  const handleAddProject = async () => {
-    if (!activeRush || !newProjectName.trim()) return;
-    const updated = addProjectToRush(activeRush, newProjectName.trim());
-    const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
-    await updateRushes(newRushes);
-    setNewProjectName('');
-    setShowAddProject(false);
-  };
-
   // Reordering handlers
   const handleMoveRush = async (fromIndex: number, direction: 'up' | 'down') => {
     const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
     if (toIndex < 0 || toIndex >= rushes.length) return;
     const newRushes = reorderRushes(rushes, fromIndex, toIndex);
     await updateRushes(newRushes);
-  };
-
-  const handleMoveProject = async (fromIndex: number, direction: 'left' | 'right') => {
-    if (!activeRush) return;
-    const toIndex = direction === 'left' ? fromIndex - 1 : fromIndex + 1;
-    if (toIndex < 0 || toIndex >= activeRush.projects.length) return;
-    const updated = reorderProjects(activeRush, fromIndex, toIndex);
-    const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
-    await updateRushes(newRushes);
-  };
-
-  const handleDeleteProject = async (projectId: string) => {
-    if (!activeRush || activeRush.projects.length <= 1) {
-      Alert.alert(t('common.error'), t('rush.cannotDeleteLastProject'));
-      return;
-    }
-    Alert.alert(
-      t('rush.deleteProject'),
-      t('rush.deleteProjectConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            const updated = removeProjectFromRush(activeRush, projectId);
-            const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
-            await updateRushes(newRushes);
-          },
-        },
-      ]
-    );
   };
 
   const handleMoveStep = async (fromIndex: number, direction: 'up' | 'down') => {
@@ -302,6 +258,26 @@ export function RushScreen() {
           style: 'destructive',
           onPress: async () => {
             const updated = removeStepFromWorkflow(activeRush, stepIndex);
+            const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+            await updateRushes(newRushes);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleResetWorkflow = async () => {
+    if (!activeRush) return;
+    Alert.alert(
+      t('rush.resetWorkflow'),
+      t('rush.resetWorkflowConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('rush.reset'),
+          style: 'destructive',
+          onPress: async () => {
+            const updated = resetWorkflow(activeRush);
             const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
             await updateRushes(newRushes);
           },
@@ -348,9 +324,11 @@ export function RushScreen() {
         >
           {rushes.map((rush, rushIndex) => {
             const isActive = rush.id === activeRushId;
+            const isBlinking = rush.id === blinkingRushId;
             const rushColor = rush.color ? RUSH_COLORS[rush.color] : colors.accent;
-            return (
-              <View key={rush.id} style={styles.rushTabWrapper}>
+
+            const tabContent = (
+              <View style={styles.rushTabWrapper}>
                 {editMode && rushIndex > 0 && (
                   <TouchableOpacity
                     style={styles.moveBtn}
@@ -364,9 +342,16 @@ export function RushScreen() {
                     styles.rushTab,
                     isActive && styles.rushTabActive,
                     isActive && { borderBottomColor: rushColor },
+                    isBlinking && styles.rushTabBlinking,
+                    isBlinking && { borderColor: rushColor },
                     editMode && styles.rushTabEdit,
                   ]}
-                  onPress={() => editMode ? null : setActiveRushId(rush.id)}
+                  onPress={() => {
+                    if (!editMode) {
+                      setActiveRushId(rush.id);
+                      if (isBlinking) setBlinkingRushId(null);
+                    }
+                  }}
                   onLongPress={() => handleDeleteRush(rush.id)}
                 >
                   <View style={[styles.tabDot, { backgroundColor: rushColor }]} />
@@ -401,32 +386,42 @@ export function RushScreen() {
                 )}
               </View>
             );
+
+            // Wrap blinking rush in Animated.View
+            if (isBlinking && !editMode) {
+              return (
+                <Animated.View key={rush.id} style={{ opacity: blinkAnim }}>
+                  {tabContent}
+                </Animated.View>
+              );
+            }
+            return <View key={rush.id}>{tabContent}</View>;
           })}
         </ScrollView>
       )}
 
-      {/* Blinking Alert - Next Project Notification */}
-      {blinkingProjectId && activeRush && (
+      {/* Blinking Alert - Next Rush Notification */}
+      {blinkingRushId && (
         <Animated.View style={[styles.blinkingAlert, { opacity: blinkAnim }]}>
           <View style={styles.blinkingAlertContent}>
             <Feather name="arrow-right-circle" size={20} color={colors.accent} />
             <Text style={styles.blinkingAlertText}>
-              {t('rush.switchToNext')}: {activeRush.projects.find(p => p.id === blinkingProjectId)?.name}
+              {t('rush.switchToNext')}: {rushes.find(r => r.id === blinkingRushId)?.name}
             </Text>
           </View>
           <View style={styles.blinkingAlertButtons}>
             <TouchableOpacity
               style={styles.blinkingAlertBtn}
               onPress={() => {
-                handleSelectProject(blinkingProjectId);
-                setBlinkingProjectId(null);
+                setActiveRushId(blinkingRushId);
+                setBlinkingRushId(null);
               }}
             >
               <Text style={styles.blinkingAlertBtnText}>{t('rush.goToNext')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.blinkingAlertDismiss}
-              onPress={() => setBlinkingProjectId(null)}
+              onPress={() => setBlinkingRushId(null)}
             >
               <Feather name="x" size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -439,7 +434,7 @@ export function RushScreen() {
         <View style={styles.timerAlertBar}>
           <View style={styles.timerAlertContent}>
             <Feather name="alert-triangle" size={20} color={colors.orange} />
-            <Text style={styles.timerAlertText}>{t('rush.timeLimitExceeded')}</Text>
+            <Text style={styles.timerAlertText}>{t('rush.switchTimerAlert')}</Text>
           </View>
           <View style={styles.timerAlertButtons}>
             <TouchableOpacity
@@ -529,123 +524,6 @@ export function RushScreen() {
                 )}
               </NeuCard>
             </Animated.View>
-
-            {/* Projects */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('rush.projects')}</Text>
-              <TouchableOpacity onPress={() => setShowAddProject(!showAddProject)}>
-                <Feather name="plus" size={18} color={colors.accent} />
-              </TouchableOpacity>
-            </View>
-
-            {showAddProject && (
-              <View style={styles.addProjectRow}>
-                <TextInput
-                  style={styles.addProjectInput}
-                  value={newProjectName}
-                  onChangeText={setNewProjectName}
-                  placeholder={t('rush.newProjectName')}
-                  placeholderTextColor={colors.textDim}
-                />
-                <TouchableOpacity style={styles.addProjectBtn} onPress={handleAddProject}>
-                  <Feather name="check" size={18} color={colors.accent} />
-                </TouchableOpacity>
-              </View>
-            )}
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.projectsScroll}
-            >
-              {activeRush.projects.map((project, projectIndex) => {
-                const isActive = project.id === activeRush.activeProjectId;
-                const isBlinking = project.id === blinkingProjectId;
-                const completedTasks = project.tasks.filter(
-                  t => t.status === 'completed' || t.status === 'skipped'
-                ).length;
-                const progress = (completedTasks / project.tasks.length) * 100;
-
-                const projectCard = (
-                  <View key={project.id} style={styles.projectCardWrapper}>
-                    {editMode && projectIndex > 0 && (
-                      <TouchableOpacity
-                        style={styles.projectMoveBtn}
-                        onPress={() => handleMoveProject(projectIndex, 'left')}
-                      >
-                        <Feather name="chevron-left" size={16} color={colors.textMuted} />
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      style={[
-                        styles.projectCard,
-                        isActive && styles.projectCardActive,
-                        isBlinking && styles.projectCardBlinking,
-                        editMode && styles.projectCardEdit,
-                      ]}
-                      onPress={() => {
-                        if (!editMode) {
-                          handleSelectProject(project.id);
-                          if (isBlinking) setBlinkingProjectId(null);
-                        }
-                      }}
-                      onLongPress={() => {
-                        setEditingNotes({ projectId: project.id });
-                        setNotesText(project.notes || '');
-                      }}
-                    >
-                      {editMode && (
-                        <TouchableOpacity
-                          style={styles.deleteProjectBtn}
-                          onPress={() => handleDeleteProject(project.id)}
-                        >
-                          <Feather name="x-circle" size={16} color={colors.red || '#ef4444'} />
-                        </TouchableOpacity>
-                      )}
-                      <Text
-                        style={[styles.projectName, isActive && styles.projectNameActive]}
-                        numberOfLines={1}
-                      >
-                        {project.name}
-                      </Text>
-                      <View style={styles.progressBar}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            { width: `${progress}%` },
-                            isActive && { backgroundColor: activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.projectProgress}>
-                        {completedTasks}/{project.tasks.length}
-                      </Text>
-                      {!editMode && project.notes && (
-                        <Feather name="file-text" size={12} color={colors.textDim} style={styles.notesIcon} />
-                      )}
-                    </TouchableOpacity>
-                    {editMode && projectIndex < activeRush.projects.length - 1 && (
-                      <TouchableOpacity
-                        style={styles.projectMoveBtn}
-                        onPress={() => handleMoveProject(projectIndex, 'right')}
-                      >
-                        <Feather name="chevron-right" size={16} color={colors.textMuted} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-
-                // Wrap blinking project in Animated.View
-                if (isBlinking && !editMode) {
-                  return (
-                    <Animated.View key={project.id} style={{ opacity: blinkAnim }}>
-                      {projectCard}
-                    </Animated.View>
-                  );
-                }
-                return projectCard;
-              })}
-            </ScrollView>
 
             {/* Current Task */}
             {activeProject && (
@@ -799,6 +677,15 @@ export function RushScreen() {
                 );
               })}
             </View>
+
+            {/* Reset Workflow Button */}
+            <TouchableOpacity
+              style={styles.resetBtn}
+              onPress={handleResetWorkflow}
+            >
+              <Feather name="refresh-cw" size={16} color={colors.textMuted} />
+              <Text style={styles.resetBtnText}>{t('rush.resetWorkflow')}</Text>
+            </TouchableOpacity>
           </>
         )}
       </ScrollView>
@@ -1049,6 +936,11 @@ const styles = StyleSheet.create({
   rushTabEdit: {
     backgroundColor: colors.cardBgDark,
     borderRadius: 8,
+  },
+  rushTabBlinking: {
+    borderWidth: 2,
+    borderRadius: 8,
+    backgroundColor: colors.cardBgDark,
   },
   moveBtn: {
     padding: 4,
@@ -1544,5 +1436,22 @@ const styles = StyleSheet.create({
   statRowText: {
     fontSize: 13,
     color: colors.textMuted,
+  },
+  resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+    paddingVertical: 12,
+    backgroundColor: colors.cardBgDark,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  resetBtnText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
 });

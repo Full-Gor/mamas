@@ -125,6 +125,13 @@
     "switchToNext": "Switch to next",
     "goToNext": "Go",
     "timeLimitExceeded": "Time limit exceeded!",
-    "continueAnyway": "Continue"
+    "continueAnyway": "Continue",
+    "resetWorkflow": "Reset Workflow",
+    "resetWorkflowConfirm": "Are you sure you want to reset the workflow? All progress will be lost.",
+    "reset": "Reset",
+    "switchTimerLabel": "Switch Timer",
+    "switchTimerHint": "Alert when it's time to switch to next rush (0 = disabled)",
+    "minutes": "min",
+    "switchTimerAlert": "Time to switch!"
   }
 }

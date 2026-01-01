@@ -27,12 +27,12 @@ interface CreateRushModalProps {
 export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const [projectNames, setProjectNames] = useState('');
   const [selectedColor, setSelectedColor] = useState<RushColor>('green');
   const [workflows, setWorkflows] = useState<SavedWorkflow[]>(DEFAULT_WORKFLOWS);
   const [selectedWorkflow, setSelectedWorkflow] = useState<SavedWorkflow | null>(null);
   const [customSteps, setCustomSteps] = useState<string[]>(['']);
   const [useCustomWorkflow, setUseCustomWorkflow] = useState(false);
+  const [switchTimer, setSwitchTimer] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -50,15 +50,6 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
   const handleSubmit = () => {
     if (!name.trim()) return;
 
-    const projects = projectNames
-      .split('\n')
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
-
-    if (projects.length === 0) {
-      projects.push('Project 1');
-    }
-
     let workflowSteps;
     if (useCustomWorkflow) {
       const validSteps = customSteps.filter(s => s.trim().length > 0);
@@ -70,15 +61,16 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
       return;
     }
 
-    const newRush = createRush(name.trim(), workflowSteps, projects, selectedColor);
+    const timerLimit = switchTimer ? parseInt(switchTimer, 10) : undefined;
+    const newRush = createRush(name.trim(), workflowSteps, [name.trim()], selectedColor, timerLimit);
     onCreateRush(newRush);
 
     // Reset form
     setName('');
-    setProjectNames('');
     setSelectedColor('green');
     setCustomSteps(['']);
     setUseCustomWorkflow(false);
+    setSwitchTimer('');
     onClose();
   };
 
@@ -148,6 +140,24 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
                   </TouchableOpacity>
                 ))}
               </View>
+            </View>
+
+            {/* Switch Timer */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('rush.switchTimerLabel')}</Text>
+              <View style={styles.timerInputRow}>
+                <TextInput
+                  style={[styles.input, styles.timerInput]}
+                  value={switchTimer}
+                  onChangeText={(text) => setSwitchTimer(text.replace(/[^0-9]/g, ''))}
+                  placeholder="0"
+                  placeholderTextColor={colors.textDim}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                />
+                <Text style={styles.timerUnit}>{t('rush.minutes')}</Text>
+              </View>
+              <Text style={styles.hint}>{t('rush.switchTimerHint')}</Text>
             </View>
 
             {/* Workflow Selection Toggle */}
@@ -234,21 +244,6 @@ export function CreateRushModal({ visible, onClose, onCreateRush }: CreateRushMo
                 )}
               </View>
             )}
-
-            {/* Project Names */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('rush.projectNames')}</Text>
-              <TextInput
-                style={[styles.input, styles.multilineInput]}
-                value={projectNames}
-                onChangeText={setProjectNames}
-                placeholder={t('rush.projectNamesPlaceholder')}
-                placeholderTextColor={colors.textDim}
-                multiline
-                numberOfLines={4}
-              />
-              <Text style={styles.hint}>{t('rush.projectNamesHint')}</Text>
-            </View>
           </ScrollView>
 
           {/* Submit Button */}
@@ -320,6 +315,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textDim,
     marginTop: 6,
+  },
+  timerInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  timerInput: {
+    width: 80,
+    textAlign: 'center',
+  },
+  timerUnit: {
+    fontSize: 14,
+    color: colors.textMuted,
   },
   colorGrid: {
     flexDirection: 'row',
