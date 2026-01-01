@@ -405,6 +405,59 @@ export function RushScreen() {
         </ScrollView>
       )}
 
+      {/* Blinking Alert - Next Project Notification */}
+      {blinkingProjectId && activeRush && (
+        <Animated.View style={[styles.blinkingAlert, { opacity: blinkAnim }]}>
+          <View style={styles.blinkingAlertContent}>
+            <Feather name="arrow-right-circle" size={20} color={colors.accent} />
+            <Text style={styles.blinkingAlertText}>
+              {t('rush.switchToNext')}: {activeRush.projects.find(p => p.id === blinkingProjectId)?.name}
+            </Text>
+          </View>
+          <View style={styles.blinkingAlertButtons}>
+            <TouchableOpacity
+              style={styles.blinkingAlertBtn}
+              onPress={() => {
+                handleSelectProject(blinkingProjectId);
+                setBlinkingProjectId(null);
+              }}
+            >
+              <Text style={styles.blinkingAlertBtnText}>{t('rush.goToNext')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.blinkingAlertDismiss}
+              onPress={() => setBlinkingProjectId(null)}
+            >
+              <Feather name="x" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* Timer Alert - Time Limit Exceeded */}
+      {timerAlert && (
+        <View style={styles.timerAlertBar}>
+          <View style={styles.timerAlertContent}>
+            <Feather name="alert-triangle" size={20} color={colors.orange} />
+            <Text style={styles.timerAlertText}>{t('rush.timeLimitExceeded')}</Text>
+          </View>
+          <View style={styles.timerAlertButtons}>
+            <TouchableOpacity
+              style={styles.timerAlertBtn}
+              onPress={() => setTimerAlert(false)}
+            >
+              <Text style={styles.timerAlertBtnText}>{t('rush.continueAnyway')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.timerAlertDismiss}
+              onPress={() => setTimerAlert(false)}
+            >
+              <Feather name="x" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       {/* Main Content */}
       <ScrollView
         style={styles.scrollView}
@@ -890,6 +943,92 @@ const styles = StyleSheet.create({
   tabsContent: {
     paddingHorizontal: 20,
     gap: 8,
+  },
+  blinkingAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.cardBg,
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  blinkingAlertContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  blinkingAlertText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  blinkingAlertButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  blinkingAlertBtn: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  blinkingAlertBtnText: {
+    color: colors.background,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  blinkingAlertDismiss: {
+    padding: 4,
+  },
+  timerAlertBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.cardBg,
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.orange,
+  },
+  timerAlertContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  timerAlertText: {
+    color: colors.orange,
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  timerAlertButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  timerAlertBtn: {
+    backgroundColor: colors.orange,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  timerAlertBtnText: {
+    color: colors.background,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  timerAlertDismiss: {
+    padding: 4,
   },
   rushTab: {
     flexDirection: 'row',

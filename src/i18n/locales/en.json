@@ -121,6 +121,10 @@
     "cannotDeleteLastProject": "Cannot delete the last project",
     "deleteStep": "Delete Step",
     "deleteStepConfirm": "Are you sure you want to delete this workflow step?",
-    "cannotDeleteLastStep": "Cannot delete the last step"
+    "cannotDeleteLastStep": "Cannot delete the last step",
+    "switchToNext": "Switch to next",
+    "goToNext": "Go",
+    "timeLimitExceeded": "Time limit exceeded!",
+    "continueAnyway": "Continue"
   }
 }
