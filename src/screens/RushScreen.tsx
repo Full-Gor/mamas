@@ -35,6 +35,7 @@ import {
   reorderRushes,
   moveWorkflowStep,
   resetWorkflow,
+  addStepToWorkflow,
 } from '../services/rushStorage';
 import type { Rush, RushProject, RushStats } from '../types/rush';
 import { RUSH_COLORS } from '../types/rush';
@@ -52,6 +53,8 @@ export function RushScreen() {
   const [blinkingRushId, setBlinkingRushId] = useState<string | null>(null);
   const [timerAlert, setTimerAlert] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [addingStepAfter, setAddingStepAfter] = useState<number | null>(null);
+  const [newStepTitle, setNewStepTitle] = useState('');
 
   // Blinking animation
   const blinkAnim = useRef(new Animated.Value(1)).current;
@@ -290,6 +293,15 @@ export function RushScreen() {
         },
       ]
     );
+  };
+
+  const handleAddStep = async () => {
+    if (!activeRush || !newStepTitle.trim() || addingStepAfter === null) return;
+    const updated = addStepToWorkflow(activeRush, newStepTitle.trim(), addingStepAfter);
+    const newRushes = rushes.map(r => r.id === updated.id ? updated : r);
+    await updateRushes(newRushes);
+    setNewStepTitle('');
+    setAddingStepAfter(null);
   };
 
   const stats = activeRush ? getRushStats(activeRush) : null;
@@ -616,65 +628,104 @@ export function RushScreen() {
                 const isCurrent = index === activeProject?.currentStepIndex;
 
                 return (
-                  <View key={step.id} style={styles.workflowStep}>
-                    {editMode && (
-                      <View style={styles.stepEditControls}>
-                        <TouchableOpacity
-                          style={[styles.stepMoveBtn, index === 0 && styles.stepMoveBtnDisabled]}
-                          onPress={() => handleMoveStep(index, 'up')}
-                          disabled={index === 0}
-                        >
-                          <Feather name="chevron-up" size={16} color={index === 0 ? colors.textDim : colors.textMuted} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.stepMoveBtn, index === activeRush.workflow.length - 1 && styles.stepMoveBtnDisabled]}
-                          onPress={() => handleMoveStep(index, 'down')}
-                          disabled={index === activeRush.workflow.length - 1}
-                        >
-                          <Feather name="chevron-down" size={16} color={index === activeRush.workflow.length - 1 ? colors.textDim : colors.textMuted} />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                    <View
-                      style={[
-                        styles.stepIndicator,
-                        isCompleted && styles.stepCompleted,
-                        isSkipped && styles.stepSkipped,
-                        isCurrent && styles.stepCurrent,
-                        isCurrent && { borderColor: activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent },
-                      ]}
-                    >
-                      {isCompleted ? (
-                        <Feather name="check" size={12} color={colors.background} />
-                      ) : isSkipped ? (
-                        <Feather name="skip-forward" size={10} color={colors.textMuted} />
-                      ) : (
-                        <Text style={styles.stepIndexText}>{index + 1}</Text>
+                  <View key={step.id}>
+                    <View style={styles.workflowStep}>
+                      {editMode && (
+                        <View style={styles.stepEditControls}>
+                          <TouchableOpacity
+                            style={[styles.stepMoveBtn, index === 0 && styles.stepMoveBtnDisabled]}
+                            onPress={() => handleMoveStep(index, 'up')}
+                            disabled={index === 0}
+                          >
+                            <Feather name="chevron-up" size={16} color={index === 0 ? colors.textDim : colors.textMuted} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.stepMoveBtn, index === activeRush.workflow.length - 1 && styles.stepMoveBtnDisabled]}
+                            onPress={() => handleMoveStep(index, 'down')}
+                            disabled={index === activeRush.workflow.length - 1}
+                          >
+                            <Feather name="chevron-down" size={16} color={index === activeRush.workflow.length - 1 ? colors.textDim : colors.textMuted} />
+                          </TouchableOpacity>
+                        </View>
                       )}
-                    </View>
-                    <View style={styles.stepContent}>
-                      <Text
+                      <View
                         style={[
-                          styles.stepTitle,
-                          (isCompleted || isSkipped) && styles.stepTitleDone,
-                          isCurrent && styles.stepTitleCurrent,
+                          styles.stepIndicator,
+                          isCompleted && styles.stepCompleted,
+                          isSkipped && styles.stepSkipped,
+                          isCurrent && styles.stepCurrent,
+                          isCurrent && { borderColor: activeRush.color ? RUSH_COLORS[activeRush.color] : colors.accent },
                         ]}
                       >
-                        {step.title}
-                      </Text>
-                      {!editMode && task?.timeSpent ? (
-                        <Text style={styles.stepTime}>{formatTime(task.timeSpent)}</Text>
-                      ) : !editMode && step.timeLimit ? (
-                        <Text style={styles.stepTimeLimit}>{step.timeLimit}m</Text>
-                      ) : null}
+                        {isCompleted ? (
+                          <Feather name="check" size={12} color={colors.background} />
+                        ) : isSkipped ? (
+                          <Feather name="skip-forward" size={10} color={colors.textMuted} />
+                        ) : (
+                          <Text style={styles.stepIndexText}>{index + 1}</Text>
+                        )}
+                      </View>
+                      <View style={styles.stepContent}>
+                        <Text
+                          style={[
+                            styles.stepTitle,
+                            (isCompleted || isSkipped) && styles.stepTitleDone,
+                            isCurrent && styles.stepTitleCurrent,
+                          ]}
+                        >
+                          {step.title}
+                        </Text>
+                        {!editMode && task?.timeSpent ? (
+                          <Text style={styles.stepTime}>{formatTime(task.timeSpent)}</Text>
+                        ) : !editMode && step.timeLimit ? (
+                          <Text style={styles.stepTimeLimit}>{step.timeLimit}m</Text>
+                        ) : null}
+                      </View>
+                      {editMode && (
+                        <TouchableOpacity
+                          style={styles.deleteStepBtn}
+                          onPress={() => handleDeleteStep(index)}
+                        >
+                          <Feather name="trash-2" size={16} color={colors.red || '#ef4444'} />
+                        </TouchableOpacity>
+                      )}
                     </View>
+                    {/* Add step button */}
                     {editMode && (
-                      <TouchableOpacity
-                        style={styles.deleteStepBtn}
-                        onPress={() => handleDeleteStep(index)}
-                      >
-                        <Feather name="trash-2" size={16} color={colors.red || '#ef4444'} />
-                      </TouchableOpacity>
+                      addingStepAfter === index ? (
+                        <View style={styles.addStepRow}>
+                          <TextInput
+                            style={styles.addStepInput}
+                            value={newStepTitle}
+                            onChangeText={setNewStepTitle}
+                            placeholder={t('rush.newStepPlaceholder')}
+                            placeholderTextColor={colors.textDim}
+                            autoFocus
+                          />
+                          <TouchableOpacity
+                            style={styles.addStepConfirmBtn}
+                            onPress={handleAddStep}
+                          >
+                            <Feather name="check" size={16} color={colors.accent} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.addStepCancelBtn}
+                            onPress={() => {
+                              setAddingStepAfter(null);
+                              setNewStepTitle('');
+                            }}
+                          >
+                            <Feather name="x" size={16} color={colors.textMuted} />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.addStepBetweenBtn}
+                          onPress={() => setAddingStepAfter(index)}
+                        >
+                          <Feather name="plus" size={14} color={colors.accent} />
+                        </TouchableOpacity>
+                      )
                     )}
                   </View>
                 );
@@ -1284,6 +1335,35 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   deleteStepBtn: {
+    padding: 8,
+  },
+  addStepBetweenBtn: {
+    alignSelf: 'center',
+    padding: 4,
+    marginVertical: 2,
+  },
+  addStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 8,
+    marginLeft: 40,
+  },
+  addStepInput: {
+    flex: 1,
+    backgroundColor: colors.cardBgLight,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    fontSize: 13,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  addStepConfirmBtn: {
+    padding: 8,
+  },
+  addStepCancelBtn: {
     padding: 8,
   },
   stepIndicator: {

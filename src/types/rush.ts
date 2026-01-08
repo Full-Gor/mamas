@@ -162,6 +162,22 @@ export const DEFAULT_WORKFLOWS: SavedWorkflow[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: 'build-debug',
+    name: 'Build & Debug',
+    steps: [
+      { title: 'Lancer le Build Initial', order: 0 },
+      { title: 'Analyser et Corriger les Logs avec Claude', order: 1 },
+      { title: 'Relancer le Build', order: 2 },
+      { title: 'Tester la Mise en Page', order: 3 },
+      { title: 'Tester les Fonctionnalités Existantes', order: 4 },
+      { title: 'Réfléchir aux Nouvelles Fonctionnalités', order: 5 },
+      { title: "Créer l'Icône de l'App", order: 6 },
+    ],
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 // Couleurs Rush mappées aux valeurs hex

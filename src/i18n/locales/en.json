@@ -132,6 +132,7 @@
     "switchTimerLabel": "Step Timer",
     "switchTimerHint": "Alert after X min per step (0 = disabled)",
     "minutes": "min",
-    "switchTimerAlert": "Time to switch!"
+    "switchTimerAlert": "Time to switch!",
+    "newStepPlaceholder": "New step name..."
   }
 }

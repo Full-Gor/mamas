@@ -132,6 +132,7 @@
     "switchTimerLabel": "Timer par étape",
     "switchTimerHint": "Alerte après X min par étape (0 = désactivé)",
     "minutes": "min",
-    "switchTimerAlert": "C'est l'heure de switcher !"
+    "switchTimerAlert": "C'est l'heure de switcher !",
+    "newStepPlaceholder": "Nom de la nouvelle étape..."
   }
 }
